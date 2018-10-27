@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <Version>1.0</Version>
+    <Company>Tyrrrz</Company>
+    <Authors>$(Company)</Authors>
+    <Copyright>Copyright (C) 2018 Alexey Golub</Copyright>
+    <Description>Package for YoutubeExplode that uses FFmpeg to easily mux or convert downloaded videos</Description>
+    <PackageTags>youtube video download convert net core standard</PackageTags>
+    <PackageProjectUrl>https://github.com/Tyrrrz/YoutubeExplode.Converter</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/Tyrrrz/YoutubeExplode.Converter/blob/master/Changelog.md</PackageReleaseNotes>
+    <PackageLicenseUrl>https://github.com/Tyrrrz/YoutubeExplode.Converter/blob/master/License.txt</PackageLicenseUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/Tyrrrz/YoutubeExplode.Converter/master/favicon.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/Tyrrrz/YoutubeExplode.Converter</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CliWrap" Version="2.1.0" />
+    <PackageReference Include="YoutubeExplode" Version="4.5.1" />
+  </ItemGroup>
+
+</Project>
