@@ -1,7 +1,7 @@
 # YoutubeExplode.Converter
 
-[![Build](https://img.shields.io/appveyor/ci/Tyrrrz/YoutubeExplode.Converter/master.svg)](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode.Converter)
-[![Tests](https://img.shields.io/appveyor/tests/Tyrrrz/YoutubeExplode.Converter/master.svg)](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode.Converter)
+[![Build](https://img.shields.io/appveyor/ci/Tyrrrz/YoutubeExplode-Converter/master.svg)](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode-Converter)
+[![Tests](https://img.shields.io/appveyor/tests/Tyrrrz/YoutubeExplode-Converter/master.svg)](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode-Converter)
 [![NuGet](https://img.shields.io/nuget/v/YoutubeExplode.Converter.svg)](https://nuget.org/packages/YoutubeExplode.Converter)
 [![NuGet](https://img.shields.io/nuget/dt/YoutubeExplode.Converter.svg)](https://nuget.org/packages/YoutubeExplode.Converter)
 
@@ -10,7 +10,7 @@ YoutubeExplode.Converter is a helper library for [YoutubeExplode](https://github
 ## Download
 
 - [NuGet](https://nuget.org/packages/YoutubeExplode.Converter): `Install-Package YoutubeExplode.Converter`
-- [Continuous integration](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode.Converter)
+- [Continuous integration](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode-Converter)
 
 ## Features
 
