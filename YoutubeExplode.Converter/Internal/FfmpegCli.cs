@@ -48,7 +48,7 @@ namespace YoutubeExplode.Converter.Internal
             args.Add("-y");
 
             // Set output file
-            args.Add($"{outputFilePath}");
+            args.Add($"\"{outputFilePath}\"");
 
             // Set up progress parsing and routing
             var totalDuration = TimeSpan.Zero;
