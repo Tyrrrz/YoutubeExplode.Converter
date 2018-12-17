@@ -10,7 +10,7 @@ using YoutubeExplode.Models.MediaStreams;
 namespace YoutubeExplode.Converter
 {
     /// <summary>
-    /// The entry point for <see cref="YoutubeExplode.Converter"/>.
+    /// The entry point for <see cref="Converter"/>.
     /// </summary>
     public class YoutubeConverter : IYoutubeConverter
     {
@@ -76,9 +76,10 @@ namespace YoutubeExplode.Converter
                         .ConfigureAwait(false);
                 }
 
-                // Avoid transcoding if the output format and input stream formats are all mp4
-                var transcode = !(format == "mp4" &&
-                                  streamInfos.All(s => s.Container == Container.Mp4 || s.Container == Container.M4A));
+                // Transcode only if one of the input stream containers doesn't match the output format
+                var transcode = streamInfos
+                    .Select(s => s.Container.GetFileExtension())
+                    .Any(f => !string.Equals(f, format, StringComparison.OrdinalIgnoreCase));
 
                 // Set up process progress handler (20% of the total progress)
                 var processProgress = progressMixer?.Split(0.2);
@@ -103,8 +104,8 @@ namespace YoutubeExplode.Converter
         {
             var result = new List<MediaStreamInfo>();
 
-            // Add the highest bitrate audio, prefer m4a
-            result.Add(set.Audio.Where(s => s.Container == Container.M4A).WithHighestBitrate() ??
+            // Add the highest bitrate audio, prefer mp4
+            result.Add(set.Audio.Where(s => s.Container == Container.Mp4).WithHighestBitrate() ??
                        set.Audio.WithHighestBitrate());
 
             // Check if needs video
