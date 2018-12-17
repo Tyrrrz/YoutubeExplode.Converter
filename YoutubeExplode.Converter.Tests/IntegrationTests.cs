@@ -23,12 +23,12 @@ namespace YoutubeExplode.Converter.Tests
             [ValueSource(typeof(TestData), nameof(TestData.VideoIds))] string videoId,
             [ValueSource(typeof(TestData), nameof(TestData.OutputFormats))] string format)
         {
-            var client = new YoutubeConverter();
+            var converter = new YoutubeConverter();
 
             Directory.CreateDirectory(TempDirPath);
             var outputFilePath = Path.Combine(TempDirPath, $"{Guid.NewGuid()}");
 
-            await client.DownloadVideoAsync(videoId, outputFilePath, format);
+            await converter.DownloadVideoAsync(videoId, outputFilePath, format);
 
             var fileInfo = new FileInfo(outputFilePath);
 
