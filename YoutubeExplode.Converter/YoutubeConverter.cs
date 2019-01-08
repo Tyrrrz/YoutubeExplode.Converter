@@ -62,8 +62,15 @@ namespace YoutubeExplode.Converter
             IProgress<double> progress = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            // Set up progress mixer
+            // Determine if transcoding is required - if one of the input stream containers doesn't match the output format
+            var transcode = streamInfos
+                .Select(s => s.Container.GetFileExtension())
+                .Any(f => !string.Equals(f, format, StringComparison.OrdinalIgnoreCase));
+
+            // Set up progress-related stuff
             var progressMixer = progress != null ? new ProgressMixer(progress) : null;
+            var downloadProgressPortion = transcode ? 0.5 : 0.95;
+            var ffmpegProgressPortion = 1 - downloadProgressPortion;
             var totalContentLength = streamInfos.Sum(s => s.Size);
 
             // Keep track of the downloaded streams
@@ -80,8 +87,9 @@ namespace YoutubeExplode.Converter
                     // Add file path to list
                     streamFilePaths.Add(streamFilePath);
 
-                    // Set up download progress handler (80% of the total progress)
-                    var streamDownloadProgress = progressMixer?.Split(0.8 * streamInfo.Size / totalContentLength);
+                    // Set up download progress handler
+                    var streamDownloadProgress =
+                        progressMixer?.Split(downloadProgressPortion * streamInfo.Size / totalContentLength);
 
                     // Download stream
                     await _youtubeClient
@@ -89,17 +97,12 @@ namespace YoutubeExplode.Converter
                         .ConfigureAwait(false);
                 }
 
-                // Transcode only if one of the input stream containers doesn't match the output format
-                var transcode = streamInfos
-                    .Select(s => s.Container.GetFileExtension())
-                    .Any(f => !string.Equals(f, format, StringComparison.OrdinalIgnoreCase));
-
-                // Set up process progress handler (20% of the total progress)
-                var processProgress = progressMixer?.Split(0.2);
+                // Set up process progress handler
+                var ffmpegProgress = progressMixer?.Split(ffmpegProgressPortion);
 
                 // Process streams (mux/transcode/etc)
                 await _ffmpeg
-                    .ProcessAsync(streamFilePaths, filePath, format, transcode, processProgress, cancellationToken)
+                    .ProcessAsync(streamFilePaths, filePath, format, transcode, ffmpegProgress, cancellationToken)
                     .ConfigureAwait(false);
 
                 // Report completion in case there are rounding issues in progress reporting
