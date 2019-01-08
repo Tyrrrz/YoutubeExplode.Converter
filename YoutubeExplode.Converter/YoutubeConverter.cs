@@ -69,7 +69,7 @@ namespace YoutubeExplode.Converter
 
             // Set up progress-related stuff
             var progressMixer = progress != null ? new ProgressMixer(progress) : null;
-            var downloadProgressPortion = transcode ? 0.5 : 0.95;
+            var downloadProgressPortion = transcode ? 0.15 : 0.99;
             var ffmpegProgressPortion = 1 - downloadProgressPortion;
             var totalContentLength = streamInfos.Sum(s => s.Size);
 
