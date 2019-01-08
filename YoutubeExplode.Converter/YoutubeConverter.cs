@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using YoutubeExplode.Converter.Internal;
+using YoutubeExplode.Converter.Services;
 using YoutubeExplode.Models.MediaStreams;
 
 namespace YoutubeExplode.Converter
@@ -14,15 +15,19 @@ namespace YoutubeExplode.Converter
     /// </summary>
     public class YoutubeConverter : IYoutubeConverter
     {
-        private readonly IYoutubeClient _client;
+        private readonly IYoutubeClient _youtubeClient;
+        private readonly IMediaStreamInfoSelector _mediaStreamInfoSelector;
+
         private readonly FfmpegCli _ffmpeg;
 
         /// <summary>
         /// Creates an instance of <see cref="YoutubeConverter"/>.
         /// </summary>
-        public YoutubeConverter(IYoutubeClient client, string ffmpegFilePath)
+        public YoutubeConverter(IYoutubeClient youtubeClient, IMediaStreamInfoSelector mediaStreamInfoSelector,
+            string ffmpegFilePath)
         {
-            _client = client.GuardNotNull(nameof(client));
+            _youtubeClient = youtubeClient.GuardNotNull(nameof(youtubeClient));
+            _mediaStreamInfoSelector = mediaStreamInfoSelector.GuardNotNull(nameof(mediaStreamInfoSelector));
 
             ffmpegFilePath.GuardNotNull(nameof(ffmpegFilePath));
             _ffmpeg = new FfmpegCli(ffmpegFilePath);
@@ -31,8 +36,16 @@ namespace YoutubeExplode.Converter
         /// <summary>
         /// Creates an instance of <see cref="YoutubeConverter"/>.
         /// </summary>
-        public YoutubeConverter(IYoutubeClient client)
-            : this(client, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg"))
+        public YoutubeConverter(IYoutubeClient youtubeClient, string ffmpegFilePath)
+            : this(youtubeClient, MediaStreamInfoSelector.Instance, ffmpegFilePath)
+        {
+        }
+
+        /// <summary>
+        /// Creates an instance of <see cref="YoutubeConverter"/>.
+        /// </summary>
+        public YoutubeConverter(IYoutubeClient youtubeClient)
+            : this(youtubeClient, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg"))
         {
         }
 
@@ -71,7 +84,7 @@ namespace YoutubeExplode.Converter
                     var streamDownloadProgress = progressMixer?.Split(0.8 * streamInfo.Size / totalContentLength);
 
                     // Download stream
-                    await _client
+                    await _youtubeClient
                         .DownloadMediaStreamAsync(streamInfo, streamFilePath, streamDownloadProgress, cancellationToken)
                         .ConfigureAwait(false);
                 }
@@ -100,23 +113,21 @@ namespace YoutubeExplode.Converter
             }
         }
 
-        private static IReadOnlyList<MediaStreamInfo> PickBestMediaStreamInfos(MediaStreamInfoSet set, string format)
+        /// <inheritdoc />
+        public Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, VideoQuality videoQuality, 
+            string filePath, string format,
+            IProgress<double> progress = null,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
-            var result = new List<MediaStreamInfo>();
+            mediaStreamInfoSet.GuardNotNull(nameof(mediaStreamInfoSet));
+            filePath.GuardNotNull(nameof(filePath));
+            format.GuardNotNull(nameof(format));
 
-            // Add the highest bitrate audio, prefer mp4
-            result.Add(set.Audio.Where(s => s.Container == Container.Mp4).WithHighestBitrate() ??
-                       set.Audio.WithHighestBitrate());
+            // Select stream infos
+            var streamInfos = _mediaStreamInfoSelector.Select(mediaStreamInfoSet, videoQuality, format);
 
-            // Check if needs video
-            if (!FormatHelper.IsAudioOnlyFormat(format))
-            {
-                // Add the highest quality video, prefer mp4
-                result.Add(set.Video.Where(s => s.Container == Container.Mp4).WithHighestVideoQuality() ??
-                           set.Video.WithHighestVideoQuality());
-            }
-
-            return result;
+            // Download media streams and process them into one file
+            return DownloadAndProcessMediaStreamsAsync(streamInfos, filePath, format, progress, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -128,17 +139,15 @@ namespace YoutubeExplode.Converter
             filePath.GuardNotNull(nameof(filePath));
             format.GuardNotNull(nameof(format));
 
-            // Turn format lowercase to simplify comparison
-            format = format.ToLowerInvariant();
-
             // Get stream info set
-            var set = await _client.GetVideoMediaStreamInfosAsync(videoId).ConfigureAwait(false);
+            var mediaStreamInfoSet = await _youtubeClient.GetVideoMediaStreamInfosAsync(videoId)
+                .ConfigureAwait(false);
 
-            // Select stream infos
-            var streamInfos = PickBestMediaStreamInfos(set, format);
+            // Get highest video quality
+            var videoQuality = mediaStreamInfoSet.GetAllVideoQualities().OrderByDescending(q => q).First();
 
             // Download media streams and process them into one file
-            await DownloadAndProcessMediaStreamsAsync(streamInfos, filePath, format, progress, cancellationToken)
+            await DownloadVideoAsync(mediaStreamInfoSet, videoQuality, filePath, format, progress, cancellationToken)
                 .ConfigureAwait(false);
         }
 
