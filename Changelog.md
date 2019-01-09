@@ -1,3 +1,10 @@
+### v1.2 (09-Jan-2019)
+
+- Added preferred framerate as a parameter to one of the overloads of `DownloadVideoAsync`, alongside preferred video quality.
+- Reworked the way preferences are passed, they are now optional parameters.
+- An exception of type `MediaStreamInfoNotFoundException` will now be thrown when there were no streams in the set that match input preferences.
+- Made progress reporting even more linear.
+
 ### v1.1 (08-Jan-2019)
 
 - Added an overload of `DownloadVideoAsync` that takes `MediaStreamInfoSet` and `VideoQuality` as parameters. It can be used if you are manually resolving the `MediaStreamInfoSet` with YoutubeExplode and want to download specific video quality.
