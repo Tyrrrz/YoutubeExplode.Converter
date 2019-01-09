@@ -11,10 +11,11 @@ namespace YoutubeExplode.Converter
     public interface IYoutubeConverter
     {
         /// <summary>
-        /// Downloads a video to a file using its stream info set, preferred video quality and the specified format.
+        /// Downloads a video to a file using its stream info set, specified format and preferred configuration.
         /// </summary>
-        Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, VideoQuality videoQuality,
+        Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet,
             string filePath, string format,
+            VideoQuality? preferredVideoQuality = null, int? preferredFramerate = null,
             IProgress<double> progress = null,
             CancellationToken cancellationToken = default(CancellationToken));
 

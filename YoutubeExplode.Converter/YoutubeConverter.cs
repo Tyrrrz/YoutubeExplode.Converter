@@ -37,7 +37,7 @@ namespace YoutubeExplode.Converter
         /// Creates an instance of <see cref="YoutubeConverter"/>.
         /// </summary>
         public YoutubeConverter(IYoutubeClient youtubeClient, string ffmpegFilePath)
-            : this(youtubeClient, MediaStreamInfoSelector.Instance, ffmpegFilePath)
+            : this(youtubeClient, new MediaStreamInfoSelector(), ffmpegFilePath)
         {
         }
 
@@ -117,8 +117,9 @@ namespace YoutubeExplode.Converter
         }
 
         /// <inheritdoc />
-        public Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, VideoQuality videoQuality, 
+        public Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet,
             string filePath, string format,
+            VideoQuality? preferredVideoQuality = null, int? preferredFramerate = null,
             IProgress<double> progress = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -127,7 +128,8 @@ namespace YoutubeExplode.Converter
             format.GuardNotNull(nameof(format));
 
             // Select stream infos
-            var streamInfos = _mediaStreamInfoSelector.Select(mediaStreamInfoSet, videoQuality, format);
+            var streamInfos = _mediaStreamInfoSelector.Select(mediaStreamInfoSet, format,
+                preferredVideoQuality, preferredFramerate);
 
             // Download media streams and process them into one file
             return DownloadAndProcessMediaStreamsAsync(streamInfos, filePath, format, progress, cancellationToken);
@@ -146,11 +148,8 @@ namespace YoutubeExplode.Converter
             var mediaStreamInfoSet = await _youtubeClient.GetVideoMediaStreamInfosAsync(videoId)
                 .ConfigureAwait(false);
 
-            // Get highest video quality
-            var videoQuality = mediaStreamInfoSet.GetAllVideoQualities().OrderByDescending(q => q).First();
-
-            // Download media streams and process them into one file
-            await DownloadVideoAsync(mediaStreamInfoSet, videoQuality, filePath, format, progress, cancellationToken)
+            // Download video with no preferences
+            await DownloadVideoAsync(mediaStreamInfoSet, filePath, format, null, null, progress, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -168,7 +167,8 @@ namespace YoutubeExplode.Converter
             // If no extension is set - default to mp4 format
             if (format.IsBlank())
                 format = "mp4";
-
+            
+            // Download video with known format
             return DownloadVideoAsync(videoId, filePath, format, progress, cancellationToken);
         }
     }

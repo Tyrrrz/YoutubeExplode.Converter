@@ -9,9 +9,9 @@ namespace YoutubeExplode.Converter.Services
     public interface IMediaStreamInfoSelector
     {
         /// <summary>
-        /// Selects the most optimal media streams from the set for encoding, based on preferred quality and output format.
+        /// Selects the most optimal media streams from the set for encoding, based on output format and preferred quality.
         /// </summary>
-        IReadOnlyList<MediaStreamInfo> Select(MediaStreamInfoSet mediaStreamInfoSet,
-            VideoQuality videoQuality, string format);
+        IReadOnlyList<MediaStreamInfo> Select(MediaStreamInfoSet mediaStreamInfoSet, string format,
+            VideoQuality? preferredVideoQuality = null, int? preferredFramerate = null);
     }
 }
