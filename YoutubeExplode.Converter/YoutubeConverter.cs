@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using YoutubeExplode.Converter.Internal;
-using YoutubeExplode.Converter.Services;
 using YoutubeExplode.Models.MediaStreams;
 
 namespace YoutubeExplode.Converter
@@ -13,32 +12,20 @@ namespace YoutubeExplode.Converter
     /// <summary>
     /// The entry point for <see cref="Converter"/>.
     /// </summary>
-    public class YoutubeConverter : IYoutubeConverter
+    public partial class YoutubeConverter : IYoutubeConverter
     {
         private readonly IYoutubeClient _youtubeClient;
-        private readonly IMediaStreamInfoSelector _mediaStreamInfoSelector;
-
         private readonly FfmpegCli _ffmpeg;
 
         /// <summary>
         /// Creates an instance of <see cref="YoutubeConverter"/>.
         /// </summary>
-        public YoutubeConverter(IYoutubeClient youtubeClient, IMediaStreamInfoSelector mediaStreamInfoSelector,
-            string ffmpegFilePath)
+        public YoutubeConverter(IYoutubeClient youtubeClient, string ffmpegFilePath)
         {
             _youtubeClient = youtubeClient.GuardNotNull(nameof(youtubeClient));
-            _mediaStreamInfoSelector = mediaStreamInfoSelector.GuardNotNull(nameof(mediaStreamInfoSelector));
 
             ffmpegFilePath.GuardNotNull(nameof(ffmpegFilePath));
             _ffmpeg = new FfmpegCli(ffmpegFilePath);
-        }
-
-        /// <summary>
-        /// Creates an instance of <see cref="YoutubeConverter"/>.
-        /// </summary>
-        public YoutubeConverter(IYoutubeClient youtubeClient, string ffmpegFilePath)
-            : this(youtubeClient, new MediaStreamInfoSelector(), ffmpegFilePath)
-        {
         }
 
         /// <summary>
@@ -57,13 +44,18 @@ namespace YoutubeExplode.Converter
         {
         }
 
-        private async Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<MediaStreamInfo> streamInfos,
+        /// <inheritdoc />
+        public async Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<MediaStreamInfo> mediaStreamInfos,
             string filePath, string format,
             IProgress<double> progress = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
+            mediaStreamInfos.GuardNotNull(nameof(mediaStreamInfos));
+            filePath.GuardNotNull(nameof(filePath));
+            format.GuardNotNull(nameof(format));
+
             // Determine if transcoding is required - if one of the input stream containers doesn't match the output format
-            var transcode = streamInfos
+            var transcode = mediaStreamInfos
                 .Select(s => s.Container.GetFileExtension())
                 .Any(f => !string.Equals(f, format, StringComparison.OrdinalIgnoreCase));
 
@@ -71,14 +63,14 @@ namespace YoutubeExplode.Converter
             var progressMixer = progress != null ? new ProgressMixer(progress) : null;
             var downloadProgressPortion = transcode ? 0.15 : 0.99;
             var ffmpegProgressPortion = 1 - downloadProgressPortion;
-            var totalContentLength = streamInfos.Sum(s => s.Size);
+            var totalContentLength = mediaStreamInfos.Sum(s => s.Size);
 
             // Keep track of the downloaded streams
             var streamFilePaths = new List<string>();
             try
             {
                 // Download all streams
-                foreach (var streamInfo in streamInfos)
+                foreach (var streamInfo in mediaStreamInfos)
                 {
                     // Generate file path
                     var streamIndex = streamFilePaths.Count + 1;
@@ -117,9 +109,7 @@ namespace YoutubeExplode.Converter
         }
 
         /// <inheritdoc />
-        public Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet,
-            string filePath, string format,
-            VideoQuality? preferredVideoQuality = null, int? preferredFramerate = null,
+        public async Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, string filePath, string format,
             IProgress<double> progress = null,
             CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -127,12 +117,34 @@ namespace YoutubeExplode.Converter
             filePath.GuardNotNull(nameof(filePath));
             format.GuardNotNull(nameof(format));
 
-            // Select stream infos
-            var streamInfos = _mediaStreamInfoSelector.Select(mediaStreamInfoSet, format,
-                preferredVideoQuality, preferredFramerate);
+            var mediaStreamInfos = new List<MediaStreamInfo>();
 
-            // Download media streams and process them into one file
-            return DownloadAndProcessMediaStreamsAsync(streamInfos, filePath, format, progress, cancellationToken);
+            // Get best audio stream
+            var audioStreamInfo = mediaStreamInfoSet.Audio
+                .Where(s => s.Container == Container.Mp4) // only mp4 to make encoding easier
+                .OrderByDescending(s => s.Bitrate) // order by bitrate
+                .FirstOrDefault(); // take highest bitrate
+
+            // Add to result
+            mediaStreamInfos.Add(audioStreamInfo);
+
+            // If needs video - get best video stream
+            if (!IsAudioOnlyFormat(format))
+            {
+                var videoStreamInfo = mediaStreamInfoSet.Video
+                    .Where(s => s.Container == Container.Mp4) // only mp4 to make encoding easier
+                    .OrderByDescending(s => s.VideoQuality) // order by video quality
+                    .ThenByDescending(s => s.Framerate) // order by framerate
+                    .ThenBy(s => s.Size) // order by size
+                    .FirstOrDefault(); // take smallest size, highest video quality and framerate
+
+                // Add to result
+                mediaStreamInfos.Add(videoStreamInfo);
+            }
+
+            // Download media streams and process them
+            await DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, filePath, format, progress, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <inheritdoc />
@@ -148,8 +160,8 @@ namespace YoutubeExplode.Converter
             var mediaStreamInfoSet = await _youtubeClient.GetVideoMediaStreamInfosAsync(videoId)
                 .ConfigureAwait(false);
 
-            // Download video with no preferences
-            await DownloadVideoAsync(mediaStreamInfoSet, filePath, format, null, null, progress, cancellationToken)
+            // Download video with known stream info set
+            await DownloadVideoAsync(mediaStreamInfoSet, filePath, format, progress, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -167,9 +179,17 @@ namespace YoutubeExplode.Converter
             // If no extension is set - default to mp4 format
             if (format.IsBlank())
                 format = "mp4";
-            
+
             // Download video with known format
             return DownloadVideoAsync(videoId, filePath, format, progress, cancellationToken);
         }
+    }
+
+    public partial class YoutubeConverter
+    {
+        private static readonly string[] AudioOnlyFormats = {"mp3", "m4a", "wav", "wma", "ogg", "aac", "opus"};
+
+        private static bool IsAudioOnlyFormat(string format) =>
+            AudioOnlyFormats.Contains(format, StringComparer.OrdinalIgnoreCase);
     }
 }

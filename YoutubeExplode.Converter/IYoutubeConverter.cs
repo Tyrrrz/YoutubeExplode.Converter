@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using YoutubeExplode.Models.MediaStreams;
@@ -11,23 +12,29 @@ namespace YoutubeExplode.Converter
     public interface IYoutubeConverter
     {
         /// <summary>
-        /// Downloads a video to a file using its stream info set, specified format and preferred configuration.
+        /// Downloads given media streams and processes them into a file in the specified format.
         /// </summary>
-        Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet,
+        Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<MediaStreamInfo> mediaStreamInfos,
             string filePath, string format,
-            VideoQuality? preferredVideoQuality = null, int? preferredFramerate = null,
             IProgress<double> progress = null,
             CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Downloads a video to a file using the specified format.
+        /// Downloads a video to a file in the specified format using the highest quality media streams from the set.
+        /// </summary>
+        Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, string filePath, string format,
+            IProgress<double> progress = null,
+            CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
+        /// Downloads a video to a file in the specified format using the highest quality media streams available.
         /// </summary>
         Task DownloadVideoAsync(string videoId, string filePath, string format,
             IProgress<double> progress = null,
             CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Downloads a video to a file.
+        /// Downloads a video to a file using the highest quality media streams available.
         /// </summary>
         Task DownloadVideoAsync(string videoId, string filePath,
             IProgress<double> progress = null, 
