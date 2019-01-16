@@ -1,3 +1,7 @@
+### v1.3 (16-Jan-2019)
+
+- Removed quality preferences and instead added a public method `DownloadAndProcessMediaStreamsAsync` that takes a list of `MediaStreamInfo`s as a parameter. That way the consumers can find the most fitting combination of audio and video streams (or just a single stream in case of audio-only or video-only output) and just pass them as a parameter. The higher level method `DownloadVideoAsync` will always attempt to find the highest possible quality streams.
+
 ### v1.2 (09-Jan-2019)
 
 - Added preferred framerate as a parameter to one of the overloads of `DownloadVideoAsync`, alongside preferred video quality.
