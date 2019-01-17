@@ -9,7 +9,7 @@ using CliWrap;
 
 namespace YoutubeExplode.Converter.Internal
 {
-    internal class FfmpegCli
+    internal partial class FfmpegCli
     {
         private readonly string _ffmpegFilePath;
 
@@ -54,41 +54,57 @@ namespace YoutubeExplode.Converter.Internal
             // Set output file
             args.Add($"\"{outputFilePath}\"");
 
-            // Set up progress parsing and routing
-            var totalDuration = TimeSpan.Zero;
-            var progressRouter = new Action<string>(s =>
+            // Set up progress router
+            var progressRouter = new FfmpegProgressRouter(progress);
+
+            // Run CLI
+            return new Cli(_ffmpegFilePath)
+                .SetWorkingDirectory(Directory.GetCurrentDirectory())
+                .SetArguments(args.JoinToString(" "))
+                .SetStandardErrorCallback(progressRouter.ProcessLine) // handle stderr to parse and route progress
+                .SetCancellationToken(cancellationToken)
+                .EnableExitCodeValidation()
+                .EnableStandardErrorValidation(false) // disable stderr validation because ffmpeg writes progress there
+                .ExecuteAsync();
+        }
+    }
+
+    internal partial class FfmpegCli
+    {
+        private class FfmpegProgressRouter
+        {
+            private readonly IProgress<double> _output;
+
+            private TimeSpan _totalDuration = TimeSpan.Zero;
+
+            public FfmpegProgressRouter(IProgress<double> output)
+            {
+                _output = output;
+            }
+
+            public void ProcessLine(string line)
             {
                 // Parse total duration if it's not known yet
-                if (totalDuration == TimeSpan.Zero)
+                if (_totalDuration == TimeSpan.Zero)
                 {
-                    var totalDurationRaw = Regex.Match(s, @"Duration:\s(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value;
+                    var totalDurationRaw = Regex.Match(line, @"Duration:\s(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value;
                     if (totalDurationRaw.IsNotBlank())
-                        totalDuration = TimeSpan.ParseExact(totalDurationRaw, "c", CultureInfo.InvariantCulture);
+                        _totalDuration = TimeSpan.ParseExact(totalDurationRaw, "c", CultureInfo.InvariantCulture);
                 }
                 // Parse current duration and report progress if total duration is known
                 else
                 {
-                    var currentDurationRaw = Regex.Match(s, @"time=(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value;
+                    var currentDurationRaw = Regex.Match(line, @"time=(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value;
                     if (currentDurationRaw.IsNotBlank())
                     {
                         var currentDuration =
                             TimeSpan.ParseExact(currentDurationRaw, "c", CultureInfo.InvariantCulture);
 
                         // Report progress
-                        progress?.Report(currentDuration.TotalMilliseconds / totalDuration.TotalMilliseconds);
+                        _output?.Report(currentDuration.TotalMilliseconds / _totalDuration.TotalMilliseconds);
                     }
                 }
-            });
-
-            // Run CLI
-            return new Cli(_ffmpegFilePath)
-                .SetWorkingDirectory(Directory.GetCurrentDirectory())
-                .SetArguments(args.JoinToString(" "))
-                .SetStandardErrorCallback(progressRouter) // handle stderr to parse and route progress
-                .SetCancellationToken(cancellationToken)
-                .EnableExitCodeValidation()
-                .EnableStandardErrorValidation(false) // disable stderr validation because ffmpeg writes progress there
-                .ExecuteAsync();
+            }
         }
     }
 }
