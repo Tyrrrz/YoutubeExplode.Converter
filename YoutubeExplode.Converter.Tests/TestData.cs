@@ -19,7 +19,6 @@ namespace YoutubeExplode.Converter.Tests
             {
                 yield return "AI7ULzgf8RU";
                 yield return "-qmBhoeQgv8";
-                yield return "tO01J-M3g0U";
             }
         }
     }
