@@ -16,6 +16,7 @@ YoutubeExplode.Converter is a helper library for [YoutubeExplode](https://github
 
 - Download and multiplex videos directly to a file
 - Manually specify output format
+- Select specific streams to download
 - Progress reporting and cancellation
 - Fully asynchronous API
 - Targets .NET Framework 4.5+ and .NET Standard 2.0+
@@ -24,13 +25,41 @@ YoutubeExplode.Converter is a helper library for [YoutubeExplode](https://github
 
 The library uses [FFmpeg](https://ffmpeg.org) under the hood and thus requires the static link binaries in order to work (only `ffmpeg.exe`, the rest are not needed). The default `YoutubeConverter` constructor will look for it in the same directory but you can also specify the exact location.
 
+If you don't want to add FFmpeg to your git repository, check out how it's downloaded in the test project.
+
+**Note:** the resource usage and execution time mostly depends on whether transcoding is required. When possible, use streams that have the same container as the output format (e.g. mp4 audio/video streams for mp4 output format). Currently, YouTube only provides adaptive streams in mp4 or webm containers, with highest quality video streams (e.g. 4K) only available in webm.
+
 ##### Download video
 
-This will download highest quality audio and video streams and mux them into one file. Transcoding is skipped if the output format is `mp4`.
+This will download highest quality audio and video streams and mux them into one file. If the output format is an audio-only format (e.g. mp3) then the video stream is not downloaded.
 
 ```c#
 var converter = new YoutubeConverter();
-await converter.DownloadVideoAsync("-qmBhoeQgv8", "video.mp4");
+await converter.DownloadVideoAsync("-qmBhoeQgv8", "video.mp4"); // output format inferred from file extension
+```
+
+##### Download and mux specific streams
+
+If you want a more fine-grained control over which streams are processed, you can select them yourself and pass them as a parameter to a different method. This lets you specify exact streams you want to use (e.g. for specific quality) while still benefiting from FFmpeg abstraction, progress reporting and cancellation support.
+
+```c#
+var client = new YoutubeClient();
+var converter = new YoutubeConverter(client); // re-using the same client instance for efficiency, not required
+
+// Get media stream info set
+var mediaStreamInfoSet = await client.GetVideoMediaStreamInfosAsync("-qmBhoeQgv8");
+
+// Select audio stream
+var audioStreamInfo = mediaStreamInfoSet.Audio.WithHighestBitrate();
+
+// Select video stream
+var videoStreamInfo = mediaStreamInfoSet.Video.FirstOrDefault(s => s.VideoQualityLabel == "1080p60");
+
+// Combine them into a collection
+var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo };
+
+// Download and process them into one file
+await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, "video.mp4", "mp4");
 ```
 
 ## Libraries used
