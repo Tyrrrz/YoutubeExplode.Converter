@@ -1,3 +1,7 @@
+### v1.4 (17-Jan-2019)
+
+- Reworked automatic stream selection in `DownloadVideoAsync` so that it prioritizes video streams by highest quality and only then by format. This ensures that it always downloads the highest quality video stream even if the input format doesn't match the output format.
+
 ### v1.3 (16-Jan-2019)
 
 - Removed quality preferences and instead added a public method `DownloadAndProcessMediaStreamsAsync` that takes a list of `MediaStreamInfo`s as a parameter. That way the consumers can find the most fitting combination of audio and video streams (or just a single stream in case of audio-only or video-only output) and just pass them as a parameter. The higher level method `DownloadVideoAsync` will always attempt to find the highest possible quality streams.
