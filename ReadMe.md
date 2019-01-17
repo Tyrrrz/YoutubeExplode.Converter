@@ -31,7 +31,11 @@ If you don't want to add FFmpeg to your git repository, check out how it's downl
 
 ##### Download video
 
-This will download highest quality audio and video streams and mux them into one file. If the output format is an audio-only format (e.g. mp3) then the video stream is not downloaded.
+This will automatically determine the most fitting audio and video streams, download them, and process them into a single file. Audio streams are prioritized by format then by bitrate. Video streams are prioritized by video quality and framerate, then by format. If the output format is audio-only (e.g. mp3) then the video stream is skipped entirely.
+
+The approach above will try to select streams to achieve the fastest execution speed while not sacrificing video quality.
+
+It's recommended to use mp4 as output format where possible, because most videos provide highest quality streams in mp4 and, when the former is not the case, transcoding to mp4 is the fastest compared to other formats.
 
 ```c#
 var converter = new YoutubeConverter();

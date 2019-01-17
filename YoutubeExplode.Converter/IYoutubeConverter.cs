@@ -12,7 +12,7 @@ namespace YoutubeExplode.Converter
     public interface IYoutubeConverter
     {
         /// <summary>
-        /// Downloads given media streams and processes them into a file in the specified format.
+        /// Downloads given media streams and processes them into a file using specified format.
         /// </summary>
         Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<MediaStreamInfo> mediaStreamInfos,
             string filePath, string format,
@@ -20,21 +20,21 @@ namespace YoutubeExplode.Converter
             CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Downloads a video to a file in the specified format using the highest quality media streams from the set.
+        /// Downloads a video to a file using specified format by selecting media streams from the given set.
         /// </summary>
         Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, string filePath, string format,
             IProgress<double> progress = null,
             CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Downloads a video to a file in the specified format using the highest quality media streams available.
+        /// Downloads a video to a file using specified format.
         /// </summary>
         Task DownloadVideoAsync(string videoId, string filePath, string format,
             IProgress<double> progress = null,
             CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Downloads a video to a file using the highest quality media streams available.
+        /// Downloads a video to a file.
         /// </summary>
         Task DownloadVideoAsync(string videoId, string filePath,
             IProgress<double> progress = null, 

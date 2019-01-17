@@ -54,10 +54,8 @@ namespace YoutubeExplode.Converter
             filePath.GuardNotNull(nameof(filePath));
             format.GuardNotNull(nameof(format));
 
-            // Determine if transcoding is required - if one of the input stream containers doesn't match the output format
-            var transcode = mediaStreamInfos
-                .Select(s => s.Container.GetFileExtension())
-                .Any(f => !string.Equals(f, format, StringComparison.OrdinalIgnoreCase));
+            // Determine if transcoding is required for at least one of the streams
+            var transcode = mediaStreamInfos.Any(s => IsTranscodingRequired(s.Container, format));
 
             // Set up progress-related stuff
             var progressMixer = progress != null ? new ProgressMixer(progress) : null;
@@ -119,24 +117,23 @@ namespace YoutubeExplode.Converter
 
             var mediaStreamInfos = new List<MediaStreamInfo>();
 
-            // Get best audio stream
+            // Get best audio stream (priority: transcoding -> bitrate)
             var audioStreamInfo = mediaStreamInfoSet.Audio
-                .Where(s => s.Container == Container.Mp4) // only mp4 to make encoding easier
-                .OrderByDescending(s => s.Bitrate) // order by bitrate
-                .FirstOrDefault(); // take highest bitrate
+                .OrderByDescending(s => !IsTranscodingRequired(s.Container, format))
+                .ThenByDescending(s => s.Bitrate)
+                .FirstOrDefault();
 
             // Add to result
             mediaStreamInfos.Add(audioStreamInfo);
 
-            // If needs video - get best video stream
+            // If needs video - get best video stream (priority: quality -> framerate -> transcoding)
             if (!IsAudioOnlyFormat(format))
             {
                 var videoStreamInfo = mediaStreamInfoSet.Video
-                    .Where(s => s.Container == Container.Mp4) // only mp4 to make encoding easier
-                    .OrderByDescending(s => s.VideoQuality) // order by video quality
-                    .ThenByDescending(s => s.Framerate) // order by framerate
-                    .ThenBy(s => s.Size) // order by size
-                    .FirstOrDefault(); // take smallest size, highest video quality and framerate
+                    .OrderByDescending(s => s.VideoQuality)
+                    .ThenByDescending(s => s.Framerate)
+                    .ThenByDescending(s => !IsTranscodingRequired(s.Container, format))
+                    .FirstOrDefault();
 
                 // Add to result
                 mediaStreamInfos.Add(videoStreamInfo);
@@ -191,5 +188,8 @@ namespace YoutubeExplode.Converter
 
         private static bool IsAudioOnlyFormat(string format) =>
             AudioOnlyFormats.Contains(format, StringComparer.OrdinalIgnoreCase);
+
+        private static bool IsTranscodingRequired(Container container, string format)
+            => !string.Equals(container.GetFileExtension(), format, StringComparison.OrdinalIgnoreCase);
     }
 }

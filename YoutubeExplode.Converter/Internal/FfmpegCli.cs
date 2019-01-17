@@ -31,12 +31,16 @@ namespace YoutubeExplode.Converter.Internal
             // Set output format
             args.Add($"-f {format}");
 
-            // If transcoding is not required, just copy streams
+            // Skip transcoding if it's not required
             if (!transcode)
                 args.Add("-c copy");
 
-            // Set quality
-            args.Add("-q 0");
+            // Optimize mp4 transcoding
+            if (transcode && string.Equals(format, "mp4", StringComparison.OrdinalIgnoreCase))
+                args.Add("-preset ultrafast");
+
+            // Set max threads
+            args.Add($"-threads {Environment.ProcessorCount}");
 
             // Disable stdin so that the process will not hang waiting for user input
             args.Add("-nostdin");
