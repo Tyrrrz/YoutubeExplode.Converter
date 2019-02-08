@@ -5,7 +5,7 @@
 [![NuGet](https://img.shields.io/nuget/v/YoutubeExplode.Converter.svg)](https://nuget.org/packages/YoutubeExplode.Converter)
 [![NuGet](https://img.shields.io/nuget/dt/YoutubeExplode.Converter.svg)](https://nuget.org/packages/YoutubeExplode.Converter)
 
-YoutubeExplode.Converter is a helper library for [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode) that provides an interface to download videos directly, without having to manually multiplex or convert streams.
+YoutubeExplode.Converter is a helper library for [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode) that provides an interface to download videos directly, without having to multiplex or convert streams yourself.
 
 ## Download
 
@@ -29,7 +29,7 @@ If you don't want to add FFmpeg to your git repository, check out how it's downl
 
 **Note:** the resource usage and execution time mostly depends on whether transcoding is required. When possible, use streams that have the same container as the output format (e.g. mp4 audio/video streams for mp4 output format). Currently, YouTube only provides adaptive streams in mp4 or webm containers, with highest quality video streams (e.g. 4K) only available in webm.
 
-##### Download video
+### Download video
 
 This will automatically determine the most fitting audio and video streams, download them, and process them into a single file. Audio streams are prioritized by format then by bitrate. Video streams are prioritized by video quality and framerate, then by format. If the output format is audio-only (e.g. mp3) then the video stream is skipped entirely.
 
@@ -42,7 +42,7 @@ var converter = new YoutubeConverter();
 await converter.DownloadVideoAsync("-qmBhoeQgv8", "video.mp4"); // output format inferred from file extension
 ```
 
-##### Download and mux specific streams
+### Download and mux specific streams
 
 If you want a more fine-grained control over which streams are processed, you can select them yourself and pass them as a parameter to a different method. This lets you specify exact streams you want to use (e.g. for specific quality) while still benefiting from FFmpeg abstraction, progress reporting and cancellation support.
 
