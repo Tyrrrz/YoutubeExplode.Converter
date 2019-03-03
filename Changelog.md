@@ -1,3 +1,7 @@
+### v1.4.1 (03-Mar-2019)
+
+- Fixed an issue where `DownloadAndProcessMediaStreamsAsync` would sometimes report progress above 1.
+
 ### v1.4 (17-Jan-2019)
 
 - Reworked automatic stream selection in `DownloadVideoAsync` so that it prioritizes video streams by highest quality and only then by format. This ensures that it always downloads the highest quality video stream even if the input format doesn't match the output format.
