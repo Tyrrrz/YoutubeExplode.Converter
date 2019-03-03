@@ -100,8 +100,12 @@ namespace YoutubeExplode.Converter.Internal
                         var currentDuration =
                             TimeSpan.ParseExact(currentDurationRaw, "c", CultureInfo.InvariantCulture);
 
+                        // Calculate progress
+                        var progress =
+                            (currentDuration.TotalMilliseconds / _totalDuration.TotalMilliseconds).Clamp(0, 1);
+
                         // Report progress
-                        _output?.Report(currentDuration.TotalMilliseconds / _totalDuration.TotalMilliseconds);
+                        _output?.Report(progress);
                     }
                 }
             }
