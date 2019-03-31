@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <Version>1.4.1</Version>
     <Company>Tyrrrz</Company>
     <Authors>$(Company)</Authors>
@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="CliWrap" Version="2.2.0" />
-    <PackageReference Include="YoutubeExplode" Version="4.6.6" />
+    <PackageReference Include="YoutubeExplode" Version="4.6.8" />
   </ItemGroup>
 
 </Project>
