@@ -9,7 +9,7 @@ YoutubeExplode.Converter is a helper library for [YoutubeExplode](https://github
 
 ## Download
 
-- [NuGet](https://nuget.org/packages/YoutubeExplode.Converter): `Install-Package YoutubeExplode.Converter`
+- [NuGet](https://nuget.org/packages/YoutubeExplode.Converter): `dotnet add package YoutubeExplode.Converter`
 - [Continuous integration](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode-Converter)
 
 ## Features
@@ -70,4 +70,5 @@ await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, "video.mp4
 
 - [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode)
 - [CliWrap](https://github.com/Tyrrrz/CliWrap)
+- [ConfigureAwait.Fody](https://github.com/Fody/ConfigureAwait)
 - [NUnit](https://github.com/nunit/nunit)

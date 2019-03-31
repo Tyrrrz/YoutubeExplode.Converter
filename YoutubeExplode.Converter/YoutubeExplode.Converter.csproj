@@ -22,6 +22,7 @@
   <ItemGroup>
     <PackageReference Include="CliWrap" Version="2.2.0" />
     <PackageReference Include="YoutubeExplode" Version="4.6.8" />
+    <PackageReference Include="ConfigureAwait.Fody" Version="3.1.0" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

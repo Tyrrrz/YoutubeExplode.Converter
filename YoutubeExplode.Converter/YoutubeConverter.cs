@@ -82,18 +82,14 @@ namespace YoutubeExplode.Converter
                         progressMixer?.Split(downloadProgressPortion * streamInfo.Size / totalContentLength);
 
                     // Download stream
-                    await _youtubeClient
-                        .DownloadMediaStreamAsync(streamInfo, streamFilePath, streamDownloadProgress, cancellationToken)
-                        .ConfigureAwait(false);
+                    await _youtubeClient.DownloadMediaStreamAsync(streamInfo, streamFilePath, streamDownloadProgress, cancellationToken);
                 }
 
                 // Set up process progress handler
                 var ffmpegProgress = progressMixer?.Split(ffmpegProgressPortion);
 
                 // Process streams (mux/transcode/etc)
-                await _ffmpeg
-                    .ProcessAsync(streamFilePaths, filePath, format, transcode, ffmpegProgress, cancellationToken)
-                    .ConfigureAwait(false);
+                await _ffmpeg.ProcessAsync(streamFilePaths, filePath, format, transcode, ffmpegProgress, cancellationToken);
 
                 // Report completion in case there are rounding issues in progress reporting
                 progress?.Report(1);
@@ -140,8 +136,7 @@ namespace YoutubeExplode.Converter
             }
 
             // Download media streams and process them
-            await DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, filePath, format, progress, cancellationToken)
-                .ConfigureAwait(false);
+            await DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, filePath, format, progress, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -154,12 +149,10 @@ namespace YoutubeExplode.Converter
             format.GuardNotNull(nameof(format));
 
             // Get stream info set
-            var mediaStreamInfoSet = await _youtubeClient.GetVideoMediaStreamInfosAsync(videoId)
-                .ConfigureAwait(false);
+            var mediaStreamInfoSet = await _youtubeClient.GetVideoMediaStreamInfosAsync(videoId);
 
             // Download video with known stream info set
-            await DownloadVideoAsync(mediaStreamInfoSet, filePath, format, progress, cancellationToken)
-                .ConfigureAwait(false);
+            await DownloadVideoAsync(mediaStreamInfoSet, filePath, format, progress, cancellationToken);
         }
 
         /// <inheritdoc />
