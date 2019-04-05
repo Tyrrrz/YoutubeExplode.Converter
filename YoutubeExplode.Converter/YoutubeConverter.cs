@@ -167,7 +167,7 @@ namespace YoutubeExplode.Converter
             var format = Path.GetExtension(filePath)?.TrimStart('.');
 
             // If no extension is set - default to mp4 format
-            if (format.IsBlank())
+            if (format == null || format.IsEmpty())
                 format = "mp4";
 
             // Download video with known format
