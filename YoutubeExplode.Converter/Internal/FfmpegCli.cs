@@ -88,14 +88,14 @@ namespace YoutubeExplode.Converter.Internal
                 if (_totalDuration == TimeSpan.Zero)
                 {
                     var totalDurationRaw = Regex.Match(line, @"Duration:\s(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value;
-                    if (!totalDurationRaw.IsEmpty())
+                    if (!totalDurationRaw.IsNullOrWhiteSpace())
                         _totalDuration = TimeSpan.ParseExact(totalDurationRaw, "c", CultureInfo.InvariantCulture);
                 }
                 // Parse current duration and report progress if total duration is known
                 else
                 {
                     var currentDurationRaw = Regex.Match(line, @"time=(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value;
-                    if (!currentDurationRaw.IsEmpty())
+                    if (!currentDurationRaw.IsNullOrWhiteSpace())
                     {
                         var currentDuration =
                             TimeSpan.ParseExact(currentDurationRaw, "c", CultureInfo.InvariantCulture);
