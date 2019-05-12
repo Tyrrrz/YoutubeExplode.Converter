@@ -1,3 +1,7 @@
+### v1.4.2 (12-May-2019)
+
+- Updated YoutubeExplode dependency to version 4.7, which resolves critical issues related to recent YouTube changes.
+
 ### v1.4.1 (03-Mar-2019)
 
 - Fixed an issue where `DownloadAndProcessMediaStreamsAsync` would sometimes report progress above 1.
