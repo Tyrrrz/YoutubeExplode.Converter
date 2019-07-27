@@ -1,3 +1,7 @@
+### v1.4.3 (27-Jul-2019)
+
+- Fixed an issue where `NullReferenceException` was thrown in `DownloadVideoAsync` on videos that don't have adaptive streams.
+
 ### v1.4.2 (12-May-2019)
 
 - Updated YoutubeExplode dependency to version 4.7, which resolves critical issues related to recent YouTube changes.
