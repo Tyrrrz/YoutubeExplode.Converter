@@ -6,10 +6,9 @@ using NUnit.Framework;
 namespace YoutubeExplode.Converter.Tests
 {
     [TestFixture]
-    public class IntegrationTests
+    public class YoutubeConverterTests
     {
-        public string TestDirPath => TestContext.CurrentContext.TestDirectory;
-        public string TempDirPath => Path.Combine(TestDirPath, "Temp");
+        public string TempDirPath => Path.Combine(TestContext.CurrentContext.TestDirectory, "Temp");
 
         [OneTimeTearDown]
         public void Cleanup()
@@ -23,17 +22,21 @@ namespace YoutubeExplode.Converter.Tests
             [ValueSource(typeof(TestData), nameof(TestData.VideoIds))] string videoId,
             [ValueSource(typeof(TestData), nameof(TestData.OutputFormats))] string format)
         {
+            // Arrange
+            Directory.CreateDirectory(TempDirPath);
+            var outputFilePath = Path.Combine(TempDirPath, Guid.NewGuid().ToString());
             var converter = new YoutubeConverter();
 
-            Directory.CreateDirectory(TempDirPath);
-            var outputFilePath = Path.Combine(TempDirPath, $"{Guid.NewGuid()}");
-
+            // Act
             await converter.DownloadVideoAsync(videoId, outputFilePath, format);
-
             var fileInfo = new FileInfo(outputFilePath);
 
-            Assert.That(fileInfo.Exists, Is.True);
-            Assert.That(fileInfo.Length, Is.GreaterThan(0));
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(fileInfo.Exists, Is.True, "File exists");
+                Assert.That(fileInfo.Length, Is.GreaterThan(0), "File size");
+            });
         }
     }
 }

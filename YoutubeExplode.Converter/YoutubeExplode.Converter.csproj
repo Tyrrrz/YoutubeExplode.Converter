@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <Version>1.4.2</Version>
     <Company>Tyrrrz</Company>
     <Authors>$(Company)</Authors>

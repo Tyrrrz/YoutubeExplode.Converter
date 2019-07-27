@@ -47,8 +47,7 @@ namespace YoutubeExplode.Converter
         /// <inheritdoc />
         public async Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<MediaStreamInfo> mediaStreamInfos,
             string filePath, string format,
-            IProgress<double> progress = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            IProgress<double> progress = null, CancellationToken cancellationToken = default)
         {
             mediaStreamInfos.GuardNotNull(nameof(mediaStreamInfos));
             filePath.GuardNotNull(nameof(filePath));
@@ -104,36 +103,14 @@ namespace YoutubeExplode.Converter
 
         /// <inheritdoc />
         public async Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, string filePath, string format,
-            IProgress<double> progress = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            IProgress<double> progress = null, CancellationToken cancellationToken = default)
         {
             mediaStreamInfoSet.GuardNotNull(nameof(mediaStreamInfoSet));
             filePath.GuardNotNull(nameof(filePath));
             format.GuardNotNull(nameof(format));
 
-            var mediaStreamInfos = new List<MediaStreamInfo>();
-
-            // Get best audio stream (priority: transcoding -> bitrate)
-            var audioStreamInfo = mediaStreamInfoSet.Audio
-                .OrderByDescending(s => !IsTranscodingRequired(s.Container, format))
-                .ThenByDescending(s => s.Bitrate)
-                .FirstOrDefault();
-
-            // Add to result
-            mediaStreamInfos.Add(audioStreamInfo);
-
-            // If needs video - get best video stream (priority: quality -> framerate -> transcoding)
-            if (!IsAudioOnlyFormat(format))
-            {
-                var videoStreamInfo = mediaStreamInfoSet.Video
-                    .OrderByDescending(s => s.VideoQuality)
-                    .ThenByDescending(s => s.Framerate)
-                    .ThenByDescending(s => !IsTranscodingRequired(s.Container, format))
-                    .FirstOrDefault();
-
-                // Add to result
-                mediaStreamInfos.Add(videoStreamInfo);
-            }
+            // Select best media stream infos based on output format
+            var mediaStreamInfos = GetBestMediaStreamInfos(mediaStreamInfoSet, format).ToArray();
 
             // Download media streams and process them
             await DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, filePath, format, progress, cancellationToken);
@@ -141,8 +118,7 @@ namespace YoutubeExplode.Converter
 
         /// <inheritdoc />
         public async Task DownloadVideoAsync(string videoId, string filePath, string format,
-            IProgress<double> progress = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            IProgress<double> progress = null, CancellationToken cancellationToken = default)
         {
             videoId.GuardNotNull(nameof(videoId));
             filePath.GuardNotNull(nameof(filePath));
@@ -157,8 +133,7 @@ namespace YoutubeExplode.Converter
 
         /// <inheritdoc />
         public Task DownloadVideoAsync(string videoId, string filePath,
-            IProgress<double> progress = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+            IProgress<double> progress = null, CancellationToken cancellationToken = default)
         {
             videoId.GuardNotNull(nameof(videoId));
             filePath.GuardNotNull(nameof(filePath));
@@ -182,7 +157,44 @@ namespace YoutubeExplode.Converter
         private static bool IsAudioOnlyFormat(string format) =>
             AudioOnlyFormats.Contains(format, StringComparer.OrdinalIgnoreCase);
 
-        private static bool IsTranscodingRequired(Container container, string format)
-            => !string.Equals(container.GetFileExtension(), format, StringComparison.OrdinalIgnoreCase);
+        private static bool IsTranscodingRequired(Container container, string format) =>
+            !string.Equals(container.GetFileExtension(), format, StringComparison.OrdinalIgnoreCase);
+
+        private static IEnumerable<MediaStreamInfo> GetBestMediaStreamInfos(MediaStreamInfoSet mediaStreamInfoSet, string format)
+        {
+            // Fail if there are no available streams
+            if (!mediaStreamInfoSet.GetAll().Any())
+                throw new ArgumentException("There are no streams available.", nameof(mediaStreamInfoSet));
+
+            // Use single muxed stream if adaptive streams are not available
+            if (!mediaStreamInfoSet.Audio.Any() || !mediaStreamInfoSet.Video.Any())
+            {
+                // Priority: video quality -> transcoding
+                yield return mediaStreamInfoSet.Muxed
+                    .OrderByDescending(s => s.VideoQuality)
+                    .ThenByDescending(s => !IsTranscodingRequired(s.Container, format))
+                    .First();
+
+                yield break;
+            }
+
+            // Include audio stream
+            // Priority: transcoding -> bitrate
+            yield return mediaStreamInfoSet.Audio
+                .OrderByDescending(s => !IsTranscodingRequired(s.Container, format))
+                .ThenByDescending(s => s.Bitrate)
+                .First();
+
+            // Include video stream
+            if (!IsAudioOnlyFormat(format))
+            {
+                // Priority: video quality -> framerate -> transcoding
+                yield return mediaStreamInfoSet.Video
+                    .OrderByDescending(s => s.VideoQuality)
+                    .ThenByDescending(s => s.Framerate)
+                    .ThenByDescending(s => !IsTranscodingRequired(s.Container, format))
+                    .First();
+            }
+        }
     }
 }

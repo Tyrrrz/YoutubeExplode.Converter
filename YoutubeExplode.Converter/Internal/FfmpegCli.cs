@@ -20,7 +20,7 @@ namespace YoutubeExplode.Converter.Internal
 
         public Task ProcessAsync(IReadOnlyList<string> inputFilePaths,
             string outputFilePath, string format, bool transcode,
-            IProgress<double> progress = null, CancellationToken cancellationToken = default(CancellationToken))
+            IProgress<double> progress = null, CancellationToken cancellationToken = default)
         {
             var args = new List<string>();
 
