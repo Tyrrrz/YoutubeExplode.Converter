@@ -18,7 +18,7 @@ $wc.Dispose()
 # Extract ffmpeg.exe from the archive
 Add-Type -Assembly System.IO.Compression.FileSystem
 $zip = [IO.Compression.ZipFile]::OpenRead("$ffmpegFilePath.zip")
-[System.IO.Compression.ZipFileExtensions]::ExtractToFile($zip.GetEntry("ffmpeg.exe"), $ffmpegFilePath)
+[IO.Compression.ZipFileExtensions]::ExtractToFile($zip.GetEntry("ffmpeg.exe"), $ffmpegFilePath)
 $zip.Dispose()
 
 # Delete the archive
