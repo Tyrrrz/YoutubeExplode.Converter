@@ -10,7 +10,7 @@
     <PackageTags>youtube video download convert net core standard</PackageTags>
     <PackageProjectUrl>https://github.com/Tyrrrz/YoutubeExplode.Converter</PackageProjectUrl>
     <PackageReleaseNotes>https://github.com/Tyrrrz/YoutubeExplode.Converter/blob/master/Changelog.md</PackageReleaseNotes>
-    <PackageIconUrl>https://raw.githubusercontent.com/Tyrrrz/YoutubeExplode.Converter/master/favicon.png</PackageIconUrl>
+    <PackageIcon>favicon.png</PackageIcon>
     <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/Tyrrrz/YoutubeExplode.Converter</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -18,6 +18,10 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <DocumentationFile>bin/$(Configuration)/$(TargetFramework)/$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../favicon.png" Pack="True" PackagePath="" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CliWrap" Version="2.3.1" />
