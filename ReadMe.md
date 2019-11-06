@@ -1,10 +1,9 @@
 # YoutubeExplode.Converter
 
-[![Build](https://img.shields.io/appveyor/ci/Tyrrrz/YoutubeExplode-Converter/master.svg)](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode-Converter/branch/master)
-[![Tests](https://img.shields.io/appveyor/tests/Tyrrrz/YoutubeExplode-Converter/master.svg)](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode-Converter/branch/master/tests)
-[![Coverage](https://img.shields.io/codecov/c/gh/Tyrrrz/YoutubeExplode.Converter/master.svg)](https://codecov.io/gh/Tyrrrz/YoutubeExplode.Converter)
-[![NuGet](https://img.shields.io/nuget/v/YoutubeExplode.Converter.svg)](https://nuget.org/packages/YoutubeExplode.Converter)
-[![NuGet](https://img.shields.io/nuget/dt/YoutubeExplode.Converter.svg)](https://nuget.org/packages/YoutubeExplode.Converter)
+[![Build](https://github.com/Tyrrrz/YoutubeExplode.Converter/workflows/CI/badge.svg?branch=master)](https://github.com/Tyrrrz/YoutubeExplode.Converter/actions)
+[![Coverage](https://codecov.io/gh/Tyrrrz/YoutubeExplode.Converter/branch/master/graph/badge.svg)](https://codecov.io/gh/Tyrrrz/YoutubeExplode.Converter)
+[![Version](https://img.shields.io/nuget/v/YoutubeExplode.Converter.svg)](https://nuget.org/packages/YoutubeExplode.Converter)
+[![Downloads](https://img.shields.io/nuget/dt/YoutubeExplode.Converter.svg)](https://nuget.org/packages/YoutubeExplode.Converter)
 [![Donate](https://img.shields.io/badge/patreon-donate-yellow.svg)](https://patreon.com/tyrrrz)
 [![Donate](https://img.shields.io/badge/buymeacoffee-donate-yellow.svg)](https://buymeacoffee.com/tyrrrz)
 
@@ -13,7 +12,6 @@ YoutubeExplode.Converter is a helper library for [YoutubeExplode](https://github
 ## Download
 
 - [NuGet](https://nuget.org/packages/YoutubeExplode.Converter): `dotnet add package YoutubeExplode.Converter`
-- [Continuous integration](https://ci.appveyor.com/project/Tyrrrz/YoutubeExplode-Converter)
 
 ## Features
 
