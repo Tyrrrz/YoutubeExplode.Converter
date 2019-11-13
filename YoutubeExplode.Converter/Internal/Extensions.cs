@@ -5,8 +5,6 @@ namespace YoutubeExplode.Converter.Internal
 {
     internal static class Extensions
     {
-        public static bool IsNullOrWhiteSpace(this string s) => string.IsNullOrWhiteSpace(s);
-
         public static string JoinToString<T>(this IEnumerable<T> source, string separator) =>
             string.Join(separator, source);
 

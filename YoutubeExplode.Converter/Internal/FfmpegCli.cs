@@ -20,7 +20,7 @@ namespace YoutubeExplode.Converter.Internal
 
         public Task ProcessAsync(IReadOnlyList<string> inputFilePaths,
             string outputFilePath, string format, bool transcode,
-            IProgress<double> progress = null, CancellationToken cancellationToken = default)
+            IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
             var args = new List<string>();
 
@@ -73,29 +73,32 @@ namespace YoutubeExplode.Converter.Internal
     {
         private class FfmpegProgressRouter
         {
-            private readonly IProgress<double> _output;
+            private readonly IProgress<double>? _output;
 
             private TimeSpan _totalDuration = TimeSpan.Zero;
 
-            public FfmpegProgressRouter(IProgress<double> output)
+            public FfmpegProgressRouter(IProgress<double>? output)
             {
                 _output = output;
             }
 
             public void ProcessLine(string line)
             {
+                if (_output is null)
+                    return;
+
                 // Parse total duration if it's not known yet
                 if (_totalDuration == TimeSpan.Zero)
                 {
                     var totalDurationRaw = Regex.Match(line, @"Duration:\s(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value;
-                    if (!totalDurationRaw.IsNullOrWhiteSpace())
+                    if (!string.IsNullOrWhiteSpace(totalDurationRaw))
                         _totalDuration = TimeSpan.ParseExact(totalDurationRaw, "c", CultureInfo.InvariantCulture);
                 }
                 // Parse current duration and report progress if total duration is known
                 else
                 {
                     var currentDurationRaw = Regex.Match(line, @"time=(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value;
-                    if (!currentDurationRaw.IsNullOrWhiteSpace())
+                    if (!string.IsNullOrWhiteSpace(currentDurationRaw))
                     {
                         var currentDuration =
                             TimeSpan.ParseExact(currentDurationRaw, "c", CultureInfo.InvariantCulture);
@@ -105,7 +108,7 @@ namespace YoutubeExplode.Converter.Internal
                             (currentDuration.TotalMilliseconds / _totalDuration.TotalMilliseconds).Clamp(0, 1);
 
                         // Report progress
-                        _output?.Report(progress);
+                        _output.Report(progress);
                     }
                 }
             }

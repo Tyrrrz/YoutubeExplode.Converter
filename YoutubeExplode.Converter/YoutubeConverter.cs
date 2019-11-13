@@ -22,9 +22,7 @@ namespace YoutubeExplode.Converter
         /// </summary>
         public YoutubeConverter(IYoutubeClient youtubeClient, string ffmpegFilePath)
         {
-            _youtubeClient = youtubeClient.GuardNotNull(nameof(youtubeClient));
-
-            ffmpegFilePath.GuardNotNull(nameof(ffmpegFilePath));
+            _youtubeClient = youtubeClient;
             _ffmpeg = new FfmpegCli(ffmpegFilePath);
         }
 
@@ -47,12 +45,8 @@ namespace YoutubeExplode.Converter
         /// <inheritdoc />
         public async Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<MediaStreamInfo> mediaStreamInfos,
             string filePath, string format,
-            IProgress<double> progress = null, CancellationToken cancellationToken = default)
+            IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            mediaStreamInfos.GuardNotNull(nameof(mediaStreamInfos));
-            filePath.GuardNotNull(nameof(filePath));
-            format.GuardNotNull(nameof(format));
-
             // Determine if transcoding is required for at least one of the streams
             var transcode = mediaStreamInfos.Any(s => IsTranscodingRequired(s.Container, format));
 
@@ -103,12 +97,8 @@ namespace YoutubeExplode.Converter
 
         /// <inheritdoc />
         public async Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, string filePath, string format,
-            IProgress<double> progress = null, CancellationToken cancellationToken = default)
+            IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            mediaStreamInfoSet.GuardNotNull(nameof(mediaStreamInfoSet));
-            filePath.GuardNotNull(nameof(filePath));
-            format.GuardNotNull(nameof(format));
-
             // Select best media stream infos based on output format
             var mediaStreamInfos = GetBestMediaStreamInfos(mediaStreamInfoSet, format).ToArray();
 
@@ -118,12 +108,8 @@ namespace YoutubeExplode.Converter
 
         /// <inheritdoc />
         public async Task DownloadVideoAsync(string videoId, string filePath, string format,
-            IProgress<double> progress = null, CancellationToken cancellationToken = default)
+            IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            videoId.GuardNotNull(nameof(videoId));
-            filePath.GuardNotNull(nameof(filePath));
-            format.GuardNotNull(nameof(format));
-
             // Get stream info set
             var mediaStreamInfoSet = await _youtubeClient.GetVideoMediaStreamInfosAsync(videoId);
 
@@ -133,16 +119,13 @@ namespace YoutubeExplode.Converter
 
         /// <inheritdoc />
         public Task DownloadVideoAsync(string videoId, string filePath,
-            IProgress<double> progress = null, CancellationToken cancellationToken = default)
+            IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            videoId.GuardNotNull(nameof(videoId));
-            filePath.GuardNotNull(nameof(filePath));
-
             // Determine output file format from extension
             var format = Path.GetExtension(filePath)?.TrimStart('.');
 
             // If no extension is set - default to mp4 format
-            if (format.IsNullOrWhiteSpace())
+            if (string.IsNullOrWhiteSpace(format))
                 format = "mp4";
 
             // Download video with known format
