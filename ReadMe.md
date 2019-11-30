@@ -65,11 +65,3 @@ var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo 
 // Download and process them into one file
 await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, "video.mp4", "mp4");
 ```
-
-## Libraries used
-
-- [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode)
-- [CliWrap](https://github.com/Tyrrrz/CliWrap)
-- [ConfigureAwait.Fody](https://github.com/Fody/ConfigureAwait)
-- [NUnit](https://github.com/nunit/nunit)
-- [Coverlet](https://github.com/tonerdo/coverlet)
