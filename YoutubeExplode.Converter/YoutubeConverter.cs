@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using YoutubeExplode.Converter.Internal;
 using YoutubeExplode.Models.MediaStreams;
 
+#if NETSTANDARD2_0
+using System.Runtime.InteropServices;
+#endif
+
 namespace YoutubeExplode.Converter
 {
     /// <summary>
@@ -24,6 +28,14 @@ namespace YoutubeExplode.Converter
         {
             _youtubeClient = youtubeClient;
             _ffmpeg = new FfmpegCli(ffmpegFilePath);
+
+#if NETSTANDARD
+            // Ensure running on desktop OS
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                !RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
+                !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                throw new PlatformNotSupportedException("YoutubeExplode.Converter works only on desktop operating systems.");
+#endif
         }
 
         /// <summary>

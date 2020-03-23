@@ -19,7 +19,7 @@ YoutubeExplode.Converter is a helper library for [YoutubeExplode](https://github
 - Select specific streams to download
 - Progress reporting and cancellation
 - Fully asynchronous API
-- Targets .NET Framework 4.5+ and .NET Standard 2.0+
+- Targets .NET Framework 4.5+ and .NET Standard 2.0+ (only Desktop OS)
 
 ## Usage
 
