@@ -5,11 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using YoutubeExplode.Converter.Internal;
-using YoutubeExplode.Models.MediaStreams;
-
-#if NETSTANDARD2_0
-using System.Runtime.InteropServices;
-#endif
+using YoutubeExplode.Converter.Internal.Extensions;
+using YoutubeExplode.Videos.Streams;
 
 namespace YoutubeExplode.Converter
 {
@@ -18,31 +15,25 @@ namespace YoutubeExplode.Converter
     /// </summary>
     public partial class YoutubeConverter : IYoutubeConverter
     {
-        private readonly IYoutubeClient _youtubeClient;
-        private readonly FfmpegCli _ffmpeg;
+        private readonly YoutubeClient _youtube;
+        private readonly FFmpeg _ffmpeg;
 
         /// <summary>
         /// Creates an instance of <see cref="YoutubeConverter"/>.
         /// </summary>
-        public YoutubeConverter(IYoutubeClient youtubeClient, string ffmpegFilePath)
+        public YoutubeConverter(YoutubeClient youtube, string ffmpegFilePath)
         {
-            _youtubeClient = youtubeClient;
-            _ffmpeg = new FfmpegCli(ffmpegFilePath);
+            _youtube = youtube;
+            _ffmpeg = new FFmpeg(ffmpegFilePath);
 
-#if NETSTANDARD
-            // Ensure running on desktop OS
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-                !RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
-                !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                throw new PlatformNotSupportedException("YoutubeExplode.Converter works only on desktop operating systems.");
-#endif
+            Platform.EnsureDesktop();
         }
 
         /// <summary>
         /// Creates an instance of <see cref="YoutubeConverter"/>.
         /// </summary>
-        public YoutubeConverter(IYoutubeClient youtubeClient)
-            : this(youtubeClient, Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg"))
+        public YoutubeConverter(YoutubeClient youtube)
+            : this(youtube, GetDefaultFFmpegFilePath())
         {
         }
 
@@ -55,25 +46,25 @@ namespace YoutubeExplode.Converter
         }
 
         /// <inheritdoc />
-        public async Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<MediaStreamInfo> mediaStreamInfos,
+        public async Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<IStreamInfo> streamInfos,
             string filePath, string format,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
             // Determine if transcoding is required for at least one of the streams
-            var transcode = mediaStreamInfos.Any(s => IsTranscodingRequired(s.Container, format));
+            var avoidTranscoding = !streamInfos.Any(s => IsTranscodingRequired(s.Container, format));
 
             // Set up progress-related stuff
             var progressMixer = progress != null ? new ProgressMixer(progress) : null;
-            var downloadProgressPortion = transcode ? 0.15 : 0.99;
+            var downloadProgressPortion = avoidTranscoding ? 0.99 : 0.15;
             var ffmpegProgressPortion = 1 - downloadProgressPortion;
-            var totalContentLength = mediaStreamInfos.Sum(s => s.Size);
+            var totalContentLength = streamInfos.Sum(s => s.Size.TotalBytes);
 
             // Keep track of the downloaded streams
             var streamFilePaths = new List<string>();
             try
             {
                 // Download all streams
-                foreach (var streamInfo in mediaStreamInfos)
+                foreach (var streamInfo in streamInfos)
                 {
                     // Generate file path
                     var streamIndex = streamFilePaths.Count + 1;
@@ -84,17 +75,17 @@ namespace YoutubeExplode.Converter
 
                     // Set up download progress handler
                     var streamDownloadProgress =
-                        progressMixer?.Split(downloadProgressPortion * streamInfo.Size / totalContentLength);
+                        progressMixer?.Split(downloadProgressPortion * streamInfo.Size.TotalBytes / totalContentLength);
 
                     // Download stream
-                    await _youtubeClient.DownloadMediaStreamAsync(streamInfo, streamFilePath, streamDownloadProgress, cancellationToken);
+                    await _youtube.Videos.Streams.DownloadAsync(streamInfo, streamFilePath, streamDownloadProgress, cancellationToken);
                 }
 
                 // Set up process progress handler
                 var ffmpegProgress = progressMixer?.Split(ffmpegProgressPortion);
 
                 // Process streams (mux/transcode/etc)
-                await _ffmpeg.ProcessAsync(streamFilePaths, filePath, format, transcode, ffmpegProgress, cancellationToken);
+                await _ffmpeg.ConvertAsync(filePath, streamFilePaths, format, "medium", avoidTranscoding, ffmpegProgress, cancellationToken);
 
                 // Report completion in case there are rounding issues in progress reporting
                 progress?.Report(1);
@@ -103,19 +94,19 @@ namespace YoutubeExplode.Converter
             {
                 // Delete all stream files
                 foreach (var streamFilePath in streamFilePaths)
-                    FileEx.TryDelete(streamFilePath);
+                    File.Delete(streamFilePath);
             }
         }
 
         /// <inheritdoc />
-        public async Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, string filePath, string format,
+        public async Task DownloadVideoAsync(StreamManifest streamManifest, string filePath, string format,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
             // Select best media stream infos based on output format
-            var mediaStreamInfos = GetBestMediaStreamInfos(mediaStreamInfoSet, format).ToArray();
+            var streamInfos = GetBestMediaStreamInfos(streamManifest, format).ToArray();
 
             // Download media streams and process them
-            await DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, filePath, format, progress, cancellationToken);
+            await DownloadAndProcessMediaStreamsAsync(streamInfos, filePath, format, progress, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -123,10 +114,10 @@ namespace YoutubeExplode.Converter
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
             // Get stream info set
-            var mediaStreamInfoSet = await _youtubeClient.GetVideoMediaStreamInfosAsync(videoId);
+            var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(videoId);
 
             // Download video with known stream info set
-            await DownloadVideoAsync(mediaStreamInfoSet, filePath, format, progress, cancellationToken);
+            await DownloadVideoAsync(streamManifest, filePath, format, progress, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -134,11 +125,9 @@ namespace YoutubeExplode.Converter
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
             // Determine output file format from extension
-            var format = Path.GetExtension(filePath)?.TrimStart('.');
-
-            // If no extension is set - default to mp4 format
-            if (string.IsNullOrWhiteSpace(format))
-                format = "mp4";
+            var format = Path.GetExtension(filePath)?
+                .TrimStart('.')
+                .NullIfWhiteSpace() ?? "mp4";
 
             // Download video with known format
             return DownloadVideoAsync(videoId, filePath, format, progress, cancellationToken);
@@ -153,19 +142,20 @@ namespace YoutubeExplode.Converter
             AudioOnlyFormats.Contains(format, StringComparer.OrdinalIgnoreCase);
 
         private static bool IsTranscodingRequired(Container container, string format) =>
-            !string.Equals(container.GetFileExtension(), format, StringComparison.OrdinalIgnoreCase);
+            !string.Equals(container.Name, format, StringComparison.OrdinalIgnoreCase);
 
-        private static IEnumerable<MediaStreamInfo> GetBestMediaStreamInfos(MediaStreamInfoSet mediaStreamInfoSet, string format)
+        private static IEnumerable<IStreamInfo> GetBestMediaStreamInfos(StreamManifest streamManifest, string format)
         {
             // Fail if there are no available streams
-            if (!mediaStreamInfoSet.GetAll().Any())
-                throw new ArgumentException("There are no streams available.", nameof(mediaStreamInfoSet));
+            if (!streamManifest.Streams.Any())
+                throw new ArgumentException("There are no streams available.", nameof(streamManifest));
 
             // Use single muxed stream if adaptive streams are not available
-            if (!mediaStreamInfoSet.Audio.Any() || !mediaStreamInfoSet.Video.Any())
+            if (!streamManifest.GetAudioOnly().Any() || !streamManifest.GetVideoOnly().Any())
             {
                 // Priority: video quality -> transcoding
-                yield return mediaStreamInfoSet.Muxed
+                yield return streamManifest
+                    .GetMuxed()
                     .OrderByDescending(s => s.VideoQuality)
                     .ThenByDescending(s => !IsTranscodingRequired(s.Container, format))
                     .First();
@@ -175,7 +165,8 @@ namespace YoutubeExplode.Converter
 
             // Include audio stream
             // Priority: transcoding -> bitrate
-            yield return mediaStreamInfoSet.Audio
+            yield return streamManifest
+                .GetAudioOnly()
                 .OrderByDescending(s => !IsTranscodingRequired(s.Container, format))
                 .ThenByDescending(s => s.Bitrate)
                 .First();
@@ -184,12 +175,32 @@ namespace YoutubeExplode.Converter
             if (!IsAudioOnlyFormat(format))
             {
                 // Priority: video quality -> framerate -> transcoding
-                yield return mediaStreamInfoSet.Video
+                yield return streamManifest
+                    .GetVideoOnly()
                     .OrderByDescending(s => s.VideoQuality)
                     .ThenByDescending(s => s.Framerate)
                     .ThenByDescending(s => !IsTranscodingRequired(s.Container, format))
                     .First();
             }
+        }
+    }
+
+    public partial class YoutubeConverter
+    {
+        private static string GetDefaultFFmpegFilePath()
+        {
+            // Check the probe directory and see if there's anything that resembles FFmpeg there.
+            // If not, fallback to just "ffmpeg" and hope it's either in current working directory or on PATH.
+
+            var primaryProbeDirPath = AppDomain.CurrentDomain.BaseDirectory;
+
+            var ffmpegFilePath = new DirectoryInfo(primaryProbeDirPath)
+                .EnumerateFiles()
+                .Select(f => f.FullName)
+                .Select(Path.GetFileNameWithoutExtension)
+                .FirstOrDefault(n => string.Equals(n, "ffmpeg", StringComparison.OrdinalIgnoreCase));
+
+            return ffmpegFilePath ?? "ffmpeg";
         }
     }
 }

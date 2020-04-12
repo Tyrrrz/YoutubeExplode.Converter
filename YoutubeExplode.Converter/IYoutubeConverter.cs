@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using YoutubeExplode.Models.MediaStreams;
+using YoutubeExplode.Videos.Streams;
 
 namespace YoutubeExplode.Converter
 {
@@ -14,14 +14,14 @@ namespace YoutubeExplode.Converter
         /// <summary>
         /// Downloads given media streams and processes them into a file using specified format.
         /// </summary>
-        Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<MediaStreamInfo> mediaStreamInfos,
+        Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<IStreamInfo> streamInfos,
             string filePath, string format,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Downloads a video to a file using specified format by selecting media streams from the given set.
         /// </summary>
-        Task DownloadVideoAsync(MediaStreamInfoSet mediaStreamInfoSet, string filePath, string format,
+        Task DownloadVideoAsync(StreamManifest streamManifest, string filePath, string format,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default);
 
         /// <summary>
