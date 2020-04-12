@@ -1,3 +1,7 @@
+### v1.4.4 (12-Apr-2020)
+
+- Added support for YoutubeExplode v5.
+
 ### v1.4.3 (27-Jul-2019)
 
 - Fixed an issue where `NullReferenceException` was thrown in `DownloadVideoAsync` on videos that don't have adaptive streams.
