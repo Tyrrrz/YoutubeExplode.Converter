@@ -47,7 +47,7 @@ namespace YoutubeExplode.Converter
 
         /// <inheritdoc />
         public async Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<IStreamInfo> streamInfos,
-            string filePath, string format,
+            string filePath, string format, ConversionPreset preset,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
             // Determine if transcoding is required for at least one of the streams
@@ -85,7 +85,7 @@ namespace YoutubeExplode.Converter
                 var ffmpegProgress = progressMixer?.Split(ffmpegProgressPortion);
 
                 // Process streams (mux/transcode/etc)
-                await _ffmpeg.ConvertAsync(filePath, streamFilePaths, format, "medium", avoidTranscoding, ffmpegProgress, cancellationToken);
+                await _ffmpeg.ConvertAsync(filePath, streamFilePaths, format, preset, avoidTranscoding, ffmpegProgress, cancellationToken);
 
                 // Report completion in case there are rounding issues in progress reporting
                 progress?.Report(1);
@@ -99,38 +99,38 @@ namespace YoutubeExplode.Converter
         }
 
         /// <inheritdoc />
-        public async Task DownloadVideoAsync(StreamManifest streamManifest, string filePath, string format,
+        public async Task DownloadVideoAsync(StreamManifest streamManifest, string filePath, string format, ConversionPreset preset,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            // Select best media stream infos based on output format
             var streamInfos = GetBestMediaStreamInfos(streamManifest, format).ToArray();
+            await DownloadAndProcessMediaStreamsAsync(streamInfos, filePath, format, preset, progress, cancellationToken);
+        }
 
-            // Download media streams and process them
-            await DownloadAndProcessMediaStreamsAsync(streamInfos, filePath, format, progress, cancellationToken);
+        /// <inheritdoc />
+        public async Task DownloadVideoAsync(string videoId, string filePath, string format, ConversionPreset preset,
+            IProgress<double>? progress = null, CancellationToken cancellationToken = default)
+        {
+            var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(videoId);
+            await DownloadVideoAsync(streamManifest, filePath, format, preset, progress, cancellationToken);
         }
 
         /// <inheritdoc />
         public async Task DownloadVideoAsync(string videoId, string filePath, string format,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            // Get stream info set
-            var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(videoId);
-
-            // Download video with known stream info set
-            await DownloadVideoAsync(streamManifest, filePath, format, progress, cancellationToken);
+            await DownloadVideoAsync(videoId, filePath, format, ConversionPreset.Medium, progress, cancellationToken);
         }
 
         /// <inheritdoc />
-        public Task DownloadVideoAsync(string videoId, string filePath,
+        public async Task DownloadVideoAsync(string videoId, string filePath,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            // Determine output file format from extension
-            var format = Path.GetExtension(filePath)?
+            var format = Path
+                .GetExtension(filePath)?
                 .TrimStart('.')
                 .NullIfWhiteSpace() ?? "mp4";
 
-            // Download video with known format
-            return DownloadVideoAsync(videoId, filePath, format, progress, cancellationToken);
+            await DownloadVideoAsync(videoId, filePath, format, progress, cancellationToken);
         }
     }
 

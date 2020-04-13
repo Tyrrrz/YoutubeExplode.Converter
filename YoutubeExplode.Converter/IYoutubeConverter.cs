@@ -15,13 +15,19 @@ namespace YoutubeExplode.Converter
         /// Downloads given media streams and processes them into a file using specified format.
         /// </summary>
         Task DownloadAndProcessMediaStreamsAsync(IReadOnlyList<IStreamInfo> streamInfos,
-            string filePath, string format,
+            string filePath, string format, ConversionPreset preset,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Downloads a video to a file using specified format by selecting media streams from the given set.
         /// </summary>
-        Task DownloadVideoAsync(StreamManifest streamManifest, string filePath, string format,
+        Task DownloadVideoAsync(StreamManifest streamManifest, string filePath, string format, ConversionPreset preset,
+            IProgress<double>? progress = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Downloads a video to a file using specified format.
+        /// </summary>
+        Task DownloadVideoAsync(string videoId, string filePath, string format, ConversionPreset preset,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default);
 
         /// <summary>
