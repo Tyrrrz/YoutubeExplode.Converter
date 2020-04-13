@@ -1,3 +1,7 @@
+### v1.5 (13-Apr-2020)
+
+- Added ability to specify a preset that influences conversion speed and output file size.
+
 ### v1.4.4 (12-Apr-2020)
 
 - Added support for YoutubeExplode v5.
