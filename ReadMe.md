@@ -47,21 +47,21 @@ await converter.DownloadVideoAsync("-qmBhoeQgv8", "video.mp4"); // output format
 If you want a more fine-grained control over which streams are processed, you can select them yourself and pass them as a parameter to a different method. This lets you specify exact streams you want to use (e.g. for specific quality) while still benefiting from FFmpeg abstraction, progress reporting and cancellation support.
 
 ```c#
-var client = new YoutubeClient();
-var converter = new YoutubeConverter(client); // re-using the same client instance for efficiency, not required
+var youtube = new YoutubeClient();
+var converter = new YoutubeConverter(youtube); // re-using the same client instance for efficiency, not required
 
-// Get media stream info set
-var mediaStreamInfoSet = await client.GetVideoMediaStreamInfosAsync("-qmBhoeQgv8");
+// Get stream manifest
+var streamManifest = await youtube.Videos.Streams.GetManifestAsync("-qmBhoeQgv8");
 
 // Select audio stream
-var audioStreamInfo = mediaStreamInfoSet.Audio.WithHighestBitrate();
+var audioStreamInfo = streamManifest.GetAudio().WithHighestBitrate();
 
 // Select video stream
-var videoStreamInfo = mediaStreamInfoSet.Video.FirstOrDefault(s => s.VideoQualityLabel == "1080p60");
+var videoStreamInfo = streamManifest.GetVideo().FirstOrDefault(s => s.VideoQualityLabel == "1080p60");
 
 // Combine them into a collection
-var mediaStreamInfos = new MediaStreamInfo[] { audioStreamInfo, videoStreamInfo };
+var streamInfos = new IStreamInfo[] { audioStreamInfo, videoStreamInfo };
 
 // Download and process them into one file
-await converter.DownloadAndProcessMediaStreamsAsync(mediaStreamInfos, "video.mp4", "mp4");
+await converter.DownloadAndProcessMediaStreamsAsync(streamInfos, "video.mp4", "mp4");
 ```
