@@ -1,3 +1,7 @@
+### v1.5.1 (22-Apr-2020)
+
+- Fixed an issue where progress was not correctly reported when there was transcoding involved.
+
 ### v1.5 (13-Apr-2020)
 
 - Added ability to specify a preset that influences conversion speed and output file size.
