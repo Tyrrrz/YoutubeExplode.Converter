@@ -59,11 +59,6 @@ namespace YoutubeExplode.Converter
     public partial struct ConversionPreset
     {
         /// <summary>
-        ///
-        /// </summary>
-        public static ConversionPreset Auto { get; } = new ConversionPreset();
-
-        /// <summary>
         /// Much faster conversion speed and bigger output file size.
         /// </summary>
         public static ConversionPreset VeryFast { get; } = new ConversionPreset("veryfast");

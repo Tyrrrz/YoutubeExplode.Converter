@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,10 +17,7 @@ namespace YoutubeExplode.Converter.Internal
     {
         private readonly string _ffmpegFilePath;
 
-        public FFmpeg(string ffmpegFilePath)
-        {
-            _ffmpegFilePath = ffmpegFilePath;
-        }
+        public FFmpeg(string ffmpegFilePath) => _ffmpegFilePath = ffmpegFilePath;
 
         public async Task ConvertAsync(
             string outputFilePath,
@@ -54,50 +55,67 @@ namespace YoutubeExplode.Converter.Internal
             arguments.Add(outputFilePath);
 
             // StdErr pipe for progress reporting
-            var stdErrPipe = progress?
-                .Pipe(p => new FfmpegProgressRouter(p))
-                .Pipe(p => PipeTarget.ToDelegate(p.ProcessLine));
+            var stdErrPipe = progress?.Pipe(p => new FFmpegProgressRouter(p)) ?? PipeTarget.Null;
 
             await Cli.Wrap(_ffmpegFilePath)
                 .WithArguments(arguments.Build())
-                .WithStandardErrorPipe(stdErrPipe ?? PipeTarget.Null)
+                .WithStandardErrorPipe(stdErrPipe)
                 .ExecuteAsync(cancellationToken);
         }
     }
 
     internal partial class FFmpeg
     {
-        private class FfmpegProgressRouter
+        private class FFmpegProgressRouter : PipeTarget
         {
+            private readonly StringBuilder _buffer  = new StringBuilder();
             private readonly IProgress<double> _output;
 
             private TimeSpan? _totalDuration;
+            private TimeSpan? _lastOffset;
 
-            public FfmpegProgressRouter(IProgress<double> output)
+            public FFmpegProgressRouter(IProgress<double> output) => _output = output;
+
+            private TimeSpan? TryParseTotalDuration(string data) => data
+                .Pipe(s => Regex.Match(s, @"Duration:\s(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value)
+                .NullIfWhiteSpace()?
+                .Pipe(s => TimeSpan.ParseExact(s, "c", CultureInfo.InvariantCulture));
+
+            private TimeSpan? TryParseCurrentOffset(string data) => data
+                .Pipe(s => Regex.Matches(s, @"time=(\d\d:\d\d:\d\d.\d\d)").Cast<Match>().LastOrDefault()?.Groups[1].Value)?
+                .NullIfWhiteSpace()?
+                .Pipe(s => TimeSpan.ParseExact(s, "c", CultureInfo.InvariantCulture));
+
+            private void HandleBuffer()
             {
-                _output = output;
+                var data = _buffer.ToString();
+
+                _totalDuration ??= TryParseTotalDuration(data);
+                if (_totalDuration == null)
+                    return;
+
+                var currentOffset = TryParseCurrentOffset(data);
+                if (currentOffset == null || currentOffset == _lastOffset)
+                    return;
+
+                _lastOffset = currentOffset;
+
+                var progress = (currentOffset.Value.TotalMilliseconds / _totalDuration.Value.TotalMilliseconds).Clamp(0, 1);
+                _output.Report(progress);
             }
 
-            public void ProcessLine(string line)
+            public override async Task CopyFromAsync(Stream source, CancellationToken cancellationToken = default)
             {
-                // Try to parse total duration
-                if (_totalDuration == null)
+                using var reader = new StreamReader(source, Console.OutputEncoding, false, 1024, true);
+
+                var buffer = new char[1024];
+                int charsRead;
+
+                while ((charsRead = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0)
                 {
-                    _totalDuration = line
-                        .Pipe(s => Regex.Match(s, @"Duration:\s(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value)
-                        .NullIfWhiteSpace()?
-                        .ParseTimeSpan("c");
-                }
-                // Try to parse current duration and report progress
-                else
-                {
-                    line
-                        .Pipe(s => Regex.Match(s, @"time=(\d\d:\d\d:\d\d.\d\d)").Groups[1].Value)
-                        .NullIfWhiteSpace()?
-                        .ParseTimeSpan("c")
-                        .Pipe(d => d.TotalMilliseconds / _totalDuration.Value.TotalMilliseconds)
-                        .Pipe(d => d.Clamp(0, 1))
-                        .Pipe(_output.Report);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    _buffer.Append(buffer, 0, charsRead);
+                    HandleBuffer();
                 }
             }
         }

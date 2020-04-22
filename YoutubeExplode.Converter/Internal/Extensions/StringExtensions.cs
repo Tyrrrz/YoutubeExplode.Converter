@@ -1,7 +1,4 @@
-﻿using System;
-using System.Globalization;
-
-namespace YoutubeExplode.Converter.Internal.Extensions
+﻿namespace YoutubeExplode.Converter.Internal.Extensions
 {
     internal static class StringExtensions
     {
@@ -9,8 +6,5 @@ namespace YoutubeExplode.Converter.Internal.Extensions
             !string.IsNullOrWhiteSpace(s)
                 ? s
                 : null;
-
-        public static TimeSpan ParseTimeSpan(this string s, string format) =>
-            TimeSpan.ParseExact(s, format, CultureInfo.InvariantCulture);
     }
 }

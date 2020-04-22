@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using YoutubeExplode.Converter.Tests.Internal;
 
 namespace YoutubeExplode.Converter.Tests
 {
@@ -25,10 +26,11 @@ namespace YoutubeExplode.Converter.Tests
             // Arrange
             Directory.CreateDirectory(TempDirPath);
             var outputFilePath = Path.Combine(TempDirPath, Guid.NewGuid().ToString());
+            var progress = new ProgressCollector<double>();
             var converter = new YoutubeConverter();
 
             // Act
-            await converter.DownloadVideoAsync(videoId, outputFilePath, format);
+            await converter.DownloadVideoAsync(videoId, outputFilePath, format, progress);
             var fileInfo = new FileInfo(outputFilePath);
 
             // Assert
@@ -36,6 +38,7 @@ namespace YoutubeExplode.Converter.Tests
             {
                 Assert.That(fileInfo.Exists, Is.True, "File exists");
                 Assert.That(fileInfo.Length, Is.GreaterThan(0), "File size");
+                Assert.That(progress.GetAll(), Is.Not.Empty, "Progress");
             });
         }
     }
