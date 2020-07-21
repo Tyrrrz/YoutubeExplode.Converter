@@ -66,6 +66,9 @@ namespace YoutubeExplode.Converter
                 .Zip(streamPipeNames, (_, n) => new NamedPipeServerStream(n, PipeDirection.Out))
                 .ToArray();
 
+            foreach (var asd in Directory.EnumerateFiles(Path.GetTempPath(), "CoreFxPipe_*"))
+                Console.WriteLine(asd);
+
             // Start piping asynchronously
             var streamPipingTasks = streamInfos
                 .Zip(streamPipes, async (s, p) =>
