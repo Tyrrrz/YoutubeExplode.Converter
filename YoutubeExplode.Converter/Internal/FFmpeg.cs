@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
@@ -21,6 +22,9 @@ namespace YoutubeExplode.Converter.Internal
             bool avoidTranscoding,
             CancellationToken cancellationToken = default)
         {
+            if (!File.Exists(_ffmpegFilePath))
+                throw new InvalidOperationException($"FFmpeg doesn't exist: {_ffmpegFilePath}. Working dir: {Directory.GetCurrentDirectory()}.");
+
             var arguments = new ArgumentsBuilder();
 
             // Inputs
