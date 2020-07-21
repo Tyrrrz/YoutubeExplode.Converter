@@ -10,6 +10,15 @@
     <CoverletOutput>bin/$(Configuration)/Coverage.xml</CoverletOutput>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IsWindows>false</IsWindows>
+    <IsLinux>false</IsLinux>
+    <IsOSX>false</IsOSX>
+    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
+    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+    <IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="GitHubActionsTestLogger" Version="1.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
@@ -22,9 +31,20 @@
     <ProjectReference Include="..\YoutubeExplode.Converter\YoutubeExplode.Converter.csproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(ProjectDir)DownloadFfmpeg.ps1&quot;" />
+  <Target Name="PostBuild" BeforeTargets="PreBuildEvent" Condition="$(IsWindows)">
+    <Message Text="test" Importance="high" />
+    <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(ProjectDir)DownloadFfmpeg-win.ps1&quot;" />
     <Copy SourceFiles="$(ProjectDir)ffmpeg.exe" DestinationFiles="$(OutDir)ffmpeg.exe" />
+  </Target>
+
+  <Target Name="PostBuild" BeforeTargets="PreBuildEvent" Condition="$(IsLinux)">
+    <Exec Command="pwsh -ExecutionPolicy Bypass -File &quot;$(ProjectDir)DownloadFfmpeg-linux.ps1&quot;" />
+    <Copy SourceFiles="$(ProjectDir)ffmpeg" DestinationFiles="$(OutDir)ffmpeg" />
+  </Target>
+
+  <Target Name="PostBuild" BeforeTargets="PreBuildEvent" Condition="$(IsOSX)">
+    <Exec Command="pwsh -ExecutionPolicy Bypass -File &quot;$(ProjectDir)DownloadFfmpeg-macos.ps1&quot;" />
+    <Copy SourceFiles="$(ProjectDir)ffmpeg" DestinationFiles="$(OutDir)ffmpeg" />
   </Target>
 
 </Project>
