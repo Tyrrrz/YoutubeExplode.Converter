@@ -77,6 +77,7 @@ namespace YoutubeExplode.Converter
                     await p.WaitForConnectionAsync(cancellationToken);
                     await _youtube.Videos.Streams.CopyToAsync(s, p, streamProgress, cancellationToken);
                     await p.FlushAsync(cancellationToken);
+                    p.WaitForPipeDrain();
                     p.Disconnect();
                 })
                 .ToArray();
