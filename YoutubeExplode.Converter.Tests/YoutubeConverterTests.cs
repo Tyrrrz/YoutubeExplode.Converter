@@ -1,45 +1,42 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using FluentAssertions;
+using Xunit;
+using YoutubeExplode.Converter.Tests.Fixtures;
 using YoutubeExplode.Converter.Tests.Internal;
 
 namespace YoutubeExplode.Converter.Tests
 {
-    [TestFixture]
-    public class YoutubeConverterTests
+    public class YoutubeConverterTests : IClassFixture<TempOutputFixture>, IClassFixture<FFmpegFixture>
     {
-        public string TempDirPath => Path.Combine(TestContext.CurrentContext.TestDirectory, "Temp");
+        private readonly TempOutputFixture _tempOutputFixture;
+        private readonly FFmpegFixture _ffmpegFixture;
 
-        [OneTimeTearDown]
-        public void Cleanup()
+        public YoutubeConverterTests(TempOutputFixture tempOutputFixture, FFmpegFixture ffmpegFixture)
         {
-            if (Directory.Exists(TempDirPath))
-                Directory.Delete(TempDirPath, true);
+            _tempOutputFixture = tempOutputFixture;
+            _ffmpegFixture = ffmpegFixture;
         }
 
-        [Test]
+        [Theory, CombinatorialData]
         public async Task YoutubeConverter_DownloadVideoAsync_Test(
-            [ValueSource(typeof(TestData), nameof(TestData.VideoIds))] string videoId,
-            [ValueSource(typeof(TestData), nameof(TestData.OutputFormats))] string format)
+            [CombinatorialValues("AI7ULzgf8RU", "-qmBhoeQgv8")] string videoId,
+            [CombinatorialValues("mp4", "mp3")] string format)
         {
             // Arrange
-            Directory.CreateDirectory(TempDirPath);
-            var outputFilePath = Path.Combine(TempDirPath, Guid.NewGuid().ToString());
+            var outputFilePath = Path.Combine(_tempOutputFixture.DirPath, $"{Guid.NewGuid()}.{format}");
             var progress = new ProgressCollector<double>();
-            var converter = new YoutubeConverter();
+            var converter = new YoutubeConverter(new YoutubeClient(), _ffmpegFixture.FilePath);
 
             // Act
             await converter.DownloadVideoAsync(videoId, outputFilePath, format, progress);
             var fileInfo = new FileInfo(outputFilePath);
 
             // Assert
-            Assert.Multiple(() =>
-            {
-                Assert.That(fileInfo.Exists, Is.True, "File exists");
-                Assert.That(fileInfo.Length, Is.GreaterThan(0), "File size");
-                Assert.That(progress.GetAll(), Is.Not.Empty, "Progress");
-            });
+            fileInfo.Exists.Should().BeTrue();
+            fileInfo.Length.Should().BeGreaterThan(0);
+            progress.GetAll().Should().NotBeEmpty();
         }
     }
 }
