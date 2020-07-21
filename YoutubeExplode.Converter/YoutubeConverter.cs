@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,51 +51,53 @@ namespace YoutubeExplode.Converter
             string filePath, string format, ConversionPreset preset,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            // Determine if transcoding is required for at least one of the streams
-            var avoidTranscoding = !streamInfos.Any(s => IsTranscodingRequired(s.Container, format));
+            var sessionId = Guid.NewGuid();
 
-            // Set up progress-related stuff
-            var progressMixer = progress != null ? new ProgressMixer(progress) : null;
-            var downloadProgressPortion = avoidTranscoding ? 0.99 : 0.15;
-            var ffmpegProgressPortion = 1 - downloadProgressPortion;
-            var totalContentLength = streamInfos.Sum(s => s.Size.TotalBytes);
+            // Split progress reporting
+            var progressMixer = progress?.Pipe(p => new ProgressMixer(p));
 
-            // Keep track of the downloaded streams
-            var streamFilePaths = new List<string>();
+            // Generate names for pipes that will transfer media streams
+            var streamPipeNames = streamInfos
+                .Select((_, i) => $"yte-conv-{sessionId}-{i}")
+                .ToArray();
+
+            // Create named pipes
+            var streamPipes = streamInfos
+                .Zip(streamPipeNames, (_, n) => new NamedPipeServerStream(n, PipeDirection.Out))
+                .ToArray();
+
+            // Start piping asynchronously
+            var streamPipingTasks = streamInfos
+                .Zip(streamPipes, async (s, p) =>
+                {
+                    var streamProgress = progressMixer?.Split(1.0 / streamInfos.Count);
+                    await p.WaitForConnectionAsync(cancellationToken);
+                    await _youtube.Videos.Streams.CopyToAsync(s, p, streamProgress, cancellationToken);
+                    p.Disconnect();
+                })
+                .ToArray();
+
             try
             {
-                // Download all streams
-                foreach (var streamInfo in streamInfos)
-                {
-                    // Generate file path
-                    var streamIndex = streamFilePaths.Count + 1;
-                    var streamFilePath = $"{filePath}.stream-{streamIndex}.tmp";
+                // Get virtual file paths for the named pipes
+                var streamFilePaths = streamPipeNames
+                    .Select(n => $@"\\.\pipe\{n}")
+                    .ToArray();
 
-                    // Add file path to list
-                    streamFilePaths.Add(streamFilePath);
+                // Avoid transcoding if the input and output formats much
+                var avoidTranscoding = !streamInfos.Any(s => IsTranscodingRequired(s.Container, format));
 
-                    // Set up download progress handler
-                    var streamDownloadProgress =
-                        progressMixer?.Split(downloadProgressPortion * streamInfo.Size.TotalBytes / totalContentLength);
-
-                    // Download stream
-                    await _youtube.Videos.Streams.DownloadAsync(streamInfo, streamFilePath, streamDownloadProgress, cancellationToken);
-                }
-
-                // Set up process progress handler
-                var ffmpegProgress = progressMixer?.Split(ffmpegProgressPortion);
-
-                // Process streams (mux/transcode/etc)
-                await _ffmpeg.ConvertAsync(filePath, streamFilePaths, format, preset, avoidTranscoding, ffmpegProgress, cancellationToken);
+                // Process streams
+                await _ffmpeg.ConvertAsync(filePath, streamFilePaths, format, preset, avoidTranscoding, cancellationToken);
+                await Task.WhenAll(streamPipingTasks);
 
                 // Report completion in case there are rounding issues in progress reporting
                 progress?.Report(1);
             }
             finally
             {
-                // Delete all stream files
-                foreach (var streamFilePath in streamFilePaths)
-                    File.Delete(streamFilePath);
+                foreach (var streamPipe in streamPipes)
+                    streamPipe.Dispose();
             }
         }
 

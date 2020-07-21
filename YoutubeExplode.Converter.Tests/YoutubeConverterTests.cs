@@ -25,7 +25,7 @@ namespace YoutubeExplode.Converter.Tests
         {
             // Arrange
             Directory.CreateDirectory(TempDirPath);
-            var outputFilePath = Path.Combine(TempDirPath, Guid.NewGuid().ToString());
+            var outputFilePath = Path.Combine(TempDirPath, $"{Guid.NewGuid()}.{format}");
             var progress = new ProgressCollector<double>();
             var converter = new YoutubeConverter();
 
