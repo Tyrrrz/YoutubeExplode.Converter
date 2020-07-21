@@ -63,7 +63,7 @@ namespace YoutubeExplode.Converter
 
             // Create named pipes
             var streamPipes = streamInfos
-                .Zip(streamPipeNames, (_, n) => new NamedPipeServerStream(n))
+                .Zip(streamPipeNames, (_, n) => new NamedPipeServerStream(n, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.WriteThrough, 10000, 10000))
                 .ToArray();
 
             foreach (var asd in Directory.EnumerateFiles(Path.GetTempPath(), "CoreFxPipe_*"))
