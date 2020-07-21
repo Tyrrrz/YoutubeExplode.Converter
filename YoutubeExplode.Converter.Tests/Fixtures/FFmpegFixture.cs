@@ -19,7 +19,7 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
                 return;
 
             await Cli.Wrap("/bin/bash")
-                .WithArguments(new[] {"-c", $"chmod 777 {FilePath}"})
+                .WithArguments(new[] {"-c", $"chmod +x {FilePath}"})
                 .ExecuteAsync();
         }
 
