@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace YoutubeExplode.Converter.Internal
@@ -16,6 +17,6 @@ namespace YoutubeExplode.Converter.Internal
         public static string GetNamedPipeUniversalPath(string pipeName) =>
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? $@"\\.\pipe\{pipeName}"
-                : $"CoreFxPipe_{pipeName}";
+                : Path.Combine(Path.GetTempPath(), "CoreFxPipe_") + pipeName;
     }
 }
