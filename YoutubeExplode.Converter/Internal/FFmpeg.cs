@@ -22,9 +22,6 @@ namespace YoutubeExplode.Converter.Internal
             bool avoidTranscoding,
             CancellationToken cancellationToken = default)
         {
-            if (!File.Exists(_ffmpegFilePath))
-                throw new InvalidOperationException($"FFmpeg doesn't exist: {_ffmpegFilePath}. Working dir: {Directory.GetCurrentDirectory()}.");
-
             var arguments = new ArgumentsBuilder();
 
             // Inputs

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace YoutubeExplode.Converter.Tests.Internal
+namespace YoutubeExplode.Converter.Tests.Fixtures
 {
     public class TempOutputFixture : IDisposable
     {

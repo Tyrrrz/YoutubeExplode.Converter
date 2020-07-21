@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
+using YoutubeExplode.Converter.Tests.Fixtures;
 using YoutubeExplode.Converter.Tests.Internal;
 
 namespace YoutubeExplode.Converter.Tests

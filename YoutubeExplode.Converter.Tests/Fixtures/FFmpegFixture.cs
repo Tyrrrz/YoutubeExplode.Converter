@@ -4,13 +4,24 @@ using System.IO.Compression;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using CliWrap;
 using Xunit;
 
-namespace YoutubeExplode.Converter.Tests.Internal
+namespace YoutubeExplode.Converter.Tests.Fixtures
 {
     public partial class FFmpegFixture : IAsyncLifetime
     {
         public string FilePath => Path.Combine(Path.GetDirectoryName(typeof(FFmpegFixture).Assembly.Location)!, GetFFmpegFileName());
+
+        private async Task EnsureFFmpegExecutePermissionAsync()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return;
+
+            await Cli.Wrap("/bin/bash")
+                .WithArguments(new[] {"-c", $"chmod 644 {FilePath}"})
+                .ExecuteAsync();
+        }
 
         private async Task DownloadFFmpegAsync()
         {
@@ -24,6 +35,8 @@ namespace YoutubeExplode.Converter.Tests.Internal
             await using var entryStream = entry.Open();
             await using var fileStream = File.Create(FilePath);
             await entryStream.CopyToAsync(fileStream);
+
+            await EnsureFFmpegExecutePermissionAsync();
         }
 
         public async Task InitializeAsync() => await DownloadFFmpegAsync();
