@@ -51,9 +51,6 @@ namespace YoutubeExplode.Converter
             string filePath, string format, ConversionPreset preset,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            foreach (var asd in Directory.EnumerateFiles(Path.GetTempPath()))
-                Console.WriteLine(asd);
-
             var sessionId = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 8);
 
             // Split progress reporting
@@ -68,6 +65,9 @@ namespace YoutubeExplode.Converter
             var streamPipes = streamInfos
                 .Zip(streamPipeNames, (_, n) => new NamedPipeServerStream(n, PipeDirection.Out))
                 .ToArray();
+
+            foreach (var asd in Directory.EnumerateFiles(Path.GetTempPath()))
+                Console.WriteLine(asd);
 
             // Start piping asynchronously
             var streamPipingTasks = streamInfos
