@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
+using CliWrap.Buffered;
 using CliWrap.Builders;
 
 namespace YoutubeExplode.Converter.Internal
@@ -54,7 +54,7 @@ namespace YoutubeExplode.Converter.Internal
 
             await Cli.Wrap(_ffmpegFilePath)
                 .WithArguments(arguments.Build())
-                .ExecuteAsync(cancellationToken);
+                .ExecuteBufferedAsync(cancellationToken);
         }
     }
 }
