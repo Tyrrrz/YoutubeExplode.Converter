@@ -51,7 +51,7 @@ namespace YoutubeExplode.Converter
             string filePath, string format, ConversionPreset preset,
             IProgress<double>? progress = null, CancellationToken cancellationToken = default)
         {
-            var sessionId = Guid.NewGuid();
+            var sessionId = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 8);
 
             // Split progress reporting
             var progressMixer = progress?.Pipe(p => new ProgressMixer(p));

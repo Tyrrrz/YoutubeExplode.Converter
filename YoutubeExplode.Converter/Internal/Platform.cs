@@ -16,6 +16,6 @@ namespace YoutubeExplode.Converter.Internal
         public static string GetNamedPipeUniversalPath(string pipeName) =>
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? $@"\\.\pipe\{pipeName}"
-                : $"/tmp/CoreFxPipe_{pipeName}";
+                : $"CoreFxPipe_{pipeName}";
     }
 }
