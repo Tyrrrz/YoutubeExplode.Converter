@@ -81,7 +81,7 @@ namespace YoutubeExplode.Converter
             {
                 // Get virtual file paths for the named pipes
                 var streamFilePaths = streamPipeNames
-                    .Select(n => $@"\\.\pipe\{n}")
+                    .Select(Platform.GetNamedPipeUniversalPath)
                     .ToArray();
 
                 // Avoid transcoding if the input and output formats much

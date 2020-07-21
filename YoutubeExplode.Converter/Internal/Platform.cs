@@ -12,5 +12,10 @@ namespace YoutubeExplode.Converter.Internal
                 !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 throw new PlatformNotSupportedException("YoutubeExplode.Converter works only on desktop operating systems.");
         }
+
+        public static string GetNamedPipeUniversalPath(string pipeName) =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? $@"\\.\pipe\{pipeName}"
+                : pipeName;
     }
 }
