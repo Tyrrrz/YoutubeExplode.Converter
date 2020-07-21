@@ -63,7 +63,7 @@ namespace YoutubeExplode.Converter
 
             // Create named pipes
             var streamPipes = streamInfos
-                .Zip(streamPipeNames, (_, n) => new NamedPipeServerStream(n, PipeDirection.Out))
+                .Zip(streamPipeNames, (_, n) => new NamedPipeServerStream(n))
                 .ToArray();
 
             foreach (var asd in Directory.EnumerateFiles(Path.GetTempPath(), "CoreFxPipe_*"))
@@ -76,6 +76,7 @@ namespace YoutubeExplode.Converter
                     var streamProgress = progressMixer?.Split(1.0 / streamInfos.Count);
                     await p.WaitForConnectionAsync(cancellationToken);
                     await _youtube.Videos.Streams.CopyToAsync(s, p, streamProgress, cancellationToken);
+                    await p.FlushAsync(cancellationToken);
                     p.Disconnect();
                 })
                 .ToArray();
