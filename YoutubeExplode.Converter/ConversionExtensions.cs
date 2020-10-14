@@ -62,7 +62,7 @@ namespace YoutubeExplode.Converter
         }
 
         /// <summary>
-        /// Downloads individual media streams and muxes them into a single file.
+        /// Downloads individual media streams and processes them into a single file.
         /// </summary>
         public static async Task DownloadAsync(
             this VideoClient videoClient,
@@ -138,7 +138,7 @@ namespace YoutubeExplode.Converter
         }
 
         /// <summary>
-        /// Downloads individual media streams for the specified video and muxes them into a single file.
+        /// Downloads individual media streams for the specified video and processes them into a single file.
         /// </summary>
         public static async Task DownloadAsync(
             this VideoClient videoClient,
@@ -159,7 +159,25 @@ namespace YoutubeExplode.Converter
         }
 
         /// <summary>
-        /// Downloads individual media streams for the specified video and muxes them into a single file.
+        /// Downloads individual media streams for the specified video and processes them into a single file.
+        /// </summary>
+        public static async Task DownloadAsync(
+            this VideoClient videoClient,
+            VideoId videoId,
+            string outputFilePath,
+            Action<ConversionRequestBuilder> configure,
+            IProgress<double>? progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            var requestBuilder = new ConversionRequestBuilder(outputFilePath);
+            configure(requestBuilder);
+            var request = requestBuilder.Build();
+
+            await videoClient.DownloadAsync(videoId, request, progress, cancellationToken);
+        }
+
+        /// <summary>
+        /// Downloads individual media streams for the specified video and processes them into a single file.
         /// Conversion format is derived from file extension. If none is specified, mp4 is chosen as default.
         /// </summary>
         public static async Task DownloadAsync(
@@ -169,8 +187,7 @@ namespace YoutubeExplode.Converter
             IProgress<double>? progress = null,
             CancellationToken cancellationToken = default)
         {
-            var request = new ConversionRequestBuilder(outputFilePath).Build();
-            await videoClient.DownloadAsync(videoId, request, progress, cancellationToken);
+            await videoClient.DownloadAsync(videoId, outputFilePath, o => {}, progress, cancellationToken);
         }
     }
 }

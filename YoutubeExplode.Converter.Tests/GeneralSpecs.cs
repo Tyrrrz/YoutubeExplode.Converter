@@ -13,11 +13,16 @@ namespace YoutubeExplode.Converter.Tests
     {
         private readonly ITestOutputHelper _testOutput;
         private readonly TempOutputFixture _tempOutputFixture;
+        private readonly FFmpegFixture _ffmpegFixture;
 
-        public GeneralSpecs(ITestOutputHelper testOutput, TempOutputFixture tempOutputFixture)
+        public GeneralSpecs(
+            ITestOutputHelper testOutput,
+            TempOutputFixture tempOutputFixture,
+            FFmpegFixture ffmpegFixture)
         {
             _testOutput = testOutput;
             _tempOutputFixture = tempOutputFixture;
+            _ffmpegFixture = ffmpegFixture;
         }
 
         [Fact]
@@ -80,6 +85,29 @@ namespace YoutubeExplode.Converter.Tests
 
             // Act
             await youtube.Videos.DownloadAsync("AI7ULzgf8RU", outputFilePath);
+
+            var fileInfo = new FileInfo(outputFilePath);
+
+            // Assert
+            fileInfo.Exists.Should().BeTrue();
+            fileInfo.Length.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public async Task I_can_download_a_video_with_custom_conversion_settings()
+        {
+            // Arrange
+            var youtube = new YoutubeClient();
+            var outputFilePath = _tempOutputFixture.GetTempFilePath();
+
+            // Act
+            await youtube.Videos.DownloadAsync(
+                "AI7ULzgf8RU", outputFilePath,
+                o => o
+                    .SetFFmpegPath(_ffmpegFixture.FilePath)
+                    .SetFormat("mp4")
+                    .SetPreset(ConversionPreset.UltraFast)
+            );
 
             var fileInfo = new FileInfo(outputFilePath);
 
