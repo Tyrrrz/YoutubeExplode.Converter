@@ -1,3 +1,7 @@
+### v2.0 (15-Oct-2020)
+
+- Reworked the library. Please refer to the readme for updated usage.
+
 ### v1.5.1 (22-Apr-2020)
 
 - Fixed an issue where progress was not correctly reported when there was transcoding involved.
