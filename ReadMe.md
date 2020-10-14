@@ -52,7 +52,6 @@ await youtube.Videos.DownloadAsync(
         .SetFormat("webm") // override format
         .SetPreset(ConversionPreset.UltraFast) // change preset
         .SetFFmpegPath("path/to/ffmpeg") // custom FFmpeg location
-        .Build()
 );
 ```
 
