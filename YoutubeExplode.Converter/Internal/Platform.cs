@@ -10,7 +10,11 @@ namespace YoutubeExplode.Converter.Internal
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
                 !RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
                 !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                throw new PlatformNotSupportedException("YoutubeExplode.Converter works only on desktop operating systems.");
+            {
+                throw new PlatformNotSupportedException(
+                    "YoutubeExplode.Converter works only on desktop operating systems."
+                );
+            }
         }
     }
 }

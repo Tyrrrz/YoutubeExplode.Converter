@@ -9,69 +9,40 @@ using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.Builders;
-using YoutubeExplode.Converter.Internal;
 using YoutubeExplode.Converter.Internal.Extensions;
-using YoutubeExplode.Converter.Options;
 
 namespace YoutubeExplode.Converter
 {
-    // Note: FFmpeg can pipe to stdout but not for all formats (for mp4, in particular, it can't)
+    // Ideally this should use named pipes and streams through stdout.
+    // Unfortunately named pipes aren't well supported on non-Windows OS and
+    // stdout streaming only works with some specific formats.
     internal partial class FFmpeg
     {
-        private readonly string _executableFilePath;
+        private readonly string _cliFilePath;
 
-        public FFmpeg(string executableFilePath) =>
-            _executableFilePath = executableFilePath;
-
-        // Ideally should use named pipes, but they don't work really well in .NET Core on Unix systems
-        private async Task<IReadOnlyList<TempFile>> SetupTempFilesAsync(
-            IReadOnlyList<Stream> inputs,
-            IProgress<double>? progress = null,
-            CancellationToken cancellationToken = default)
-        {
-            var progressMixer = progress?.Pipe(p => new ProgressMixer(p));
-            var streamProgressOperations = inputs.Select(_ => progressMixer?.Split(1.0 / inputs.Count)).ToArray();
-
-            return await Task.WhenAll(
-                inputs.Zip(streamProgressOperations, async (stream, localProgress)  =>
-                {
-                    var tempFile = TempFile.Create();
-                    using var tempFileStream = File.Create(tempFile.Path);
-
-                    await stream.CopyToAsync(
-                        tempFileStream,
-                        localProgress,
-                        cancellationToken
-                    );
-
-                    return tempFile;
-                })
-            );
-        }
+        public FFmpeg(string cliFilePath) => _cliFilePath = cliFilePath;
 
         private string GetArguments(
             IReadOnlyList<string> inputFilePaths,
-            ConversionOptions options,
-            bool isTranscodingRequired)
+            string outputFilePath,
+            string format,
+            string preset,
+            bool transcode)
         {
             var arguments = new ArgumentsBuilder();
 
             foreach (var inputFilePath in inputFilePaths)
+            {
                 arguments.Add("-i").Add(inputFilePath);
+            }
 
-            arguments.Add("-f").Add(options.Format);
+            arguments.Add("-f").Add(format);
+            arguments.Add("-preset").Add(preset);
 
-            arguments.Add("-preset").Add(options.Preset.ToString().ToLowerInvariant());
-
-            if (options.TargetFramerate != null)
-                arguments.Add("-r").Add(options.TargetFramerate.Value.FramesPerSecond);
-
-            if (options.TargetBitrate != null)
-                arguments.Add("-b").Add(options.TargetBitrate.Value.BitsPerSecond);
-
-            // We can only skip transcoding if the input/output streams match one to one
-            if (!isTranscodingRequired && options.TargetFramerate == null && options.TargetBitrate == null)
+            if (!transcode)
+            {
                 arguments.Add("-c").Add("copy");
+            }
 
             arguments
                 .Add("-threads").Add(Environment.ProcessorCount)
@@ -79,82 +50,35 @@ namespace YoutubeExplode.Converter
                 .Add("-shortest")
                 .Add("-y");
 
-            arguments.Add(options.OutputFilePath);
+            arguments.Add(outputFilePath);
 
             return arguments.Build();
         }
 
-        private async Task ExecuteCommandAsync(
+        public async Task ExecuteAsync(
             IReadOnlyList<string> inputFilePaths,
-            ConversionOptions options,
-            bool isTranscodingRequired,
+            string outputFilePath,
+            string format,
+            string preset,
+            bool transcode,
             IProgress<double>? progress = null,
             CancellationToken cancellationToken = default)
         {
-            var arguments = GetArguments(
-                inputFilePaths,
-                options,
-                isTranscodingRequired
-            );
-
+            // Stderr is used to report progress
             var stdErrPipe = progress?.Pipe(p => new FFmpegProgressRouter(p)) ?? PipeTarget.Null;
 
-            await Cli.Wrap(_executableFilePath)
+            var arguments = GetArguments(
+                inputFilePaths,
+                outputFilePath,
+                format,
+                preset,
+                transcode
+            );
+
+            await Cli.Wrap(_cliFilePath)
                 .WithArguments(arguments)
                 .WithStandardErrorPipe(stdErrPipe)
                 .ExecuteAsync(cancellationToken);
-        }
-
-        public async Task ConvertStreamsAsync(
-            IReadOnlyList<Stream> inputs,
-            ConversionOptions options,
-            bool isTranscodingRequired,
-            IProgress<double>? progress = null,
-            CancellationToken cancellationToken = default)
-        {
-            var setupProgressPortion = isTranscodingRequired ? 0.15 : 0.99;
-            var progressMixer = progress?.Pipe(p => new ProgressMixer(p));
-
-            var setupProgress = progressMixer?.Split(setupProgressPortion);
-            var executeProgress = progressMixer?.Split(1 - setupProgressPortion);
-
-            var inputFiles = await SetupTempFilesAsync(
-                inputs,
-                setupProgress,
-                cancellationToken
-            );
-
-            try
-            {
-                await ExecuteCommandAsync(
-                    inputFiles.Select(f => f.Path).ToArray(),
-                    options,
-                    isTranscodingRequired,
-                    executeProgress,
-                    cancellationToken
-                );
-            }
-            finally
-            {
-                foreach (var inputFile in inputFiles)
-                    inputFile.Dispose();
-            }
-        }
-    }
-
-    internal partial class FFmpeg
-    {
-        public static string GetDefaultExecutableFilePath()
-        {
-            // Check the probe directory and see if there's anything that resembles FFmpeg there.
-            // If not, fallback to just "ffmpeg" and hope it's either in current working directory or on PATH.
-
-            var ffmpegFilePath = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory)
-                .EnumerateFiles()
-                .Select(f => f.FullName)
-                .FirstOrDefault(f => string.Equals(Path.GetFileNameWithoutExtension(f), "ffmpeg", StringComparison.OrdinalIgnoreCase));
-
-            return ffmpegFilePath ?? "ffmpeg";
         }
     }
 

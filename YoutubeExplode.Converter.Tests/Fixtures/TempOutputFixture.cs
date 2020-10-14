@@ -5,7 +5,10 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
 {
     public class TempOutputFixture : IDisposable
     {
-        public string DirPath => Path.Combine(Path.GetDirectoryName(typeof(FFmpegFixture).Assembly.Location)!, "Temp");
+        public string DirPath => Path.Combine(
+            Path.GetDirectoryName(typeof(TempOutputFixture).Assembly.Location)!,
+            "Temp"
+        );
 
         public TempOutputFixture() => Directory.CreateDirectory(DirPath);
 

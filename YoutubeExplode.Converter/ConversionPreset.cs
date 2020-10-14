@@ -1,9 +1,9 @@
-﻿namespace YoutubeExplode.Converter.Options
+﻿namespace YoutubeExplode.Converter
 {
     /// <summary>
     /// Encoder preset.
     /// </summary>
-    public enum EncoderPreset
+    public enum ConversionPreset
     {
         /// <summary>
         /// Much slower conversion speed and smaller output file size.

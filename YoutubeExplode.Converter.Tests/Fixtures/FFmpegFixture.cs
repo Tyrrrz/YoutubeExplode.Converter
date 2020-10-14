@@ -11,7 +11,10 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
 {
     public partial class FFmpegFixture : IAsyncLifetime
     {
-        public string FilePath => Path.Combine(Path.GetDirectoryName(typeof(FFmpegFixture).Assembly.Location)!, GetFFmpegFileName());
+        public string FilePath => Path.Combine(
+            Path.GetDirectoryName(typeof(FFmpegFixture).Assembly.Location)!,
+            GetFFmpegFileName()
+        );
 
         private async Task EnsureFFmpegExecutePermissionAsync()
         {
@@ -32,6 +35,9 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
 
             var entry = zip.GetEntry(GetFFmpegFileName());
 
+            if (entry == null)
+                throw new FileNotFoundException("Downloaded archive doesn't contain FFmpeg.");
+
             await using var entryStream = entry.Open();
             await using var fileStream = File.Create(FilePath);
             await entryStream.CopyToAsync(fileStream);
@@ -39,13 +45,16 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
             await EnsureFFmpegExecutePermissionAsync();
         }
 
-        public async Task InitializeAsync() => await DownloadFFmpegAsync();
-
-        public Task DisposeAsync()
+        public async Task InitializeAsync()
         {
-            File.Delete(FilePath);
-            return Task.CompletedTask;
+            // Don't re-download FFmpeg from last time
+            if (File.Exists(FilePath))
+                return;
+
+            await DownloadFFmpegAsync();
         }
+
+        public Task DisposeAsync() => Task.CompletedTask;
     }
 
     public partial class FFmpegFixture
