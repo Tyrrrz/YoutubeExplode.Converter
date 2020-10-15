@@ -13,8 +13,8 @@ using YoutubeExplode.Converter.Internal.Extensions;
 
 namespace YoutubeExplode.Converter
 {
-    // Ideally this should use named pipes and streams through stdout.
-    // Unfortunately named pipes aren't well supported on non-Windows OS and
+    // Ideally this should use named pipes and stream through stdout.
+    // However, named pipes aren't well supported on non-Windows OS and
     // stdout streaming only works with some specific formats.
     internal partial class FFmpeg
     {

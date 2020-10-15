@@ -12,7 +12,7 @@ using YoutubeExplode.Videos.Streams;
 namespace YoutubeExplode.Converter
 {
     /// <summary>
-    /// Extensions for <see cref="VideoClient"/> that enable downloading videos with conversion via FFmpeg.
+    /// Extensions for <see cref="VideoClient"/> that provide interface for downloading videos through FFmpeg.
     /// </summary>
     public static class ConversionExtensions
     {
@@ -62,7 +62,7 @@ namespace YoutubeExplode.Converter
         }
 
         /// <summary>
-        /// Downloads individual media streams and processes them into a single file.
+        /// Downloads specified media streams and processes them into a single file.
         /// </summary>
         public static async Task DownloadAsync(
             this VideoClient videoClient,
@@ -131,14 +131,14 @@ namespace YoutubeExplode.Converter
                     }
                     catch
                     {
-                        // Temp files will be deleted eventually
+                        // Try our best but don't crash
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Downloads individual media streams for the specified video and processes them into a single file.
+        /// Selects best media streams for the specified video, downloads them, and processes into a single file.
         /// </summary>
         public static async Task DownloadAsync(
             this VideoClient videoClient,
@@ -159,7 +159,8 @@ namespace YoutubeExplode.Converter
         }
 
         /// <summary>
-        /// Downloads individual media streams for the specified video and processes them into a single file.
+        /// Selects best media streams for the specified video, downloads them, and processes into a single file.
+        /// Conversion format is derived from file extension, unless explicitly specified.
         /// </summary>
         public static async Task DownloadAsync(
             this VideoClient videoClient,
@@ -177,8 +178,8 @@ namespace YoutubeExplode.Converter
         }
 
         /// <summary>
-        /// Downloads individual media streams for the specified video and processes them into a single file.
-        /// Conversion format is derived from file extension. If none is specified, mp4 is chosen as default.
+        /// Selects best media streams for the specified video, downloads them, and processes into a single file.
+        /// Conversion format is derived from file extension. If none is specified, mp4 is chosen as the default.
         /// </summary>
         public static async Task DownloadAsync(
             this VideoClient videoClient,
