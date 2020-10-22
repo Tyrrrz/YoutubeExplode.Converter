@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace YoutubeExplode.Converter
 {
@@ -16,7 +16,7 @@ namespace YoutubeExplode.Converter
         /// <summary>
         /// Whether this format is a known audio-only format.
         /// </summary>
-        public bool IsAudioOnly => AudioOnlyFormats.Contains(Name, StringComparer.OrdinalIgnoreCase);
+        public bool IsAudioOnly => AudioOnlyFormats.Contains(Name);
 
         /// <summary>
         /// Initializes an instance of <see cref="ConversionFormat"/>.
@@ -29,6 +29,7 @@ namespace YoutubeExplode.Converter
 
     public partial struct ConversionFormat
     {
-        private static readonly string[] AudioOnlyFormats = {"mp3", "m4a", "wav", "wma", "ogg", "aac", "opus"};
+        private static readonly HashSet<string> AudioOnlyFormats =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) {"mp3", "m4a", "wav", "wma", "ogg", "aac", "opus"};
     }
 }
