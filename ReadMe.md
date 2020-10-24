@@ -23,7 +23,7 @@ YoutubeExplode.Converter is an extension package for [YoutubeExplode](https://gi
 
 This library relies on [FFmpeg](https://ffmpeg.org), which you can download [here](https://github.com/vot/ffbinaries-prebuilt). By default, `YoutubeExplode.Converter` will look for the CLI it in the probe directory (where the `dll` files are located), but you can also specify the exact location as well.
 
-Resource usage and execution time depends mostly on whether transcoding between streams is required. When possible, use streams that have the same container as the output format (e.g. `mp4` audio/video streams for `mp4` output format). Currently, YouTube only provides adaptive streams in `mp4` or `webm` containers, with highest quality video streams (e.g. 4K) only available in webm.
+Resource usage and execution time depends mostly on whether transcoding between streams is required. When possible, use streams that have the same container as the output format (e.g. `mp4` audio/video streams for `mp4` output format). Currently, YouTube only provides adaptive streams in `mp4` or `webm` containers, with highest quality video streams (e.g. 4K) only available in `webm`.
 
 ### Download video in highest quality
 
