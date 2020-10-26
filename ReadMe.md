@@ -29,14 +29,14 @@ Resource usage and execution time depends mostly on whether transcoding between 
 
 ### Download video in highest quality
 
-The following will automatically resolve and determine the most fitting set of streams for the specified format, download them, and process into a single file: 
+The following will automatically resolve and determine the most fitting set of streams for the specified format, download them, and process into a single file:
 
 ```c#
 using YoutubeExplode;
 using YoutubeExplode.Converter;
 
 var youtube = new YoutubeClient();
-await youtube.Videos.DownloadAsync("https://youtu.be/rQb7aIBuTvA", "video.mp4");
+await youtube.Videos.DownloadAsync("https://youtube.com/watch?v=u_yIGGhubZs", "video.mp4");
 ```
 
 Audio streams are prioritized by format then by bitrate, while video streams are prioritized by video quality and framerate, then by format. Additionally, if the output format is a known audio-only format (e.g. `mp3` or `ogg`) then only the audio stream is downloaded.
@@ -49,7 +49,7 @@ You can use one of the overloads to configure different aspects of the conversio
 var youtube = new YoutubeClient();
 
 await youtube.Videos.DownloadAsync(
-    "https://youtu.be/rQb7aIBuTvA", "video.mp4",
+    "https://youtube.com/watch?v=u_yIGGhubZs", "video.mp4",
     o => o
         .SetFormat("webm") // override format
         .SetPreset(ConversionPreset.UltraFast) // change preset
@@ -65,7 +65,7 @@ You can also skip the default strategy for determining most fitting streams and 
 var youtube = new YoutubeClient();
 
 // Get stream manifest
-var streamManifest = await youtube.Videos.Streams.GetManifestAsync("https://youtu.be/rQb7aIBuTvA");
+var streamManifest = await youtube.Videos.Streams.GetManifestAsync("https://youtube.com/watch?v=u_yIGGhubZs");
 
 // Select streams (1080p60 / highest bitrate audio)
 var audioStreamInfo = streamManifest.GetAudio().WithHighestBitrate();
