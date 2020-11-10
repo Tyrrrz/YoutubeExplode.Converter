@@ -262,3 +262,6 @@ __pycache__/
 
 # Ignore ffmpeg.exe
 ffmpeg.exe
+
+# Coverage
+*.opencover.xml
