@@ -64,8 +64,12 @@ namespace YoutubeExplode.Converter
             IProgress<double>? progress = null,
             CancellationToken cancellationToken = default)
         {
-            // Stderr is used to report progress
-            var stdErrPipe = progress?.Pipe(p => new FFmpegProgressRouter(p)) ?? PipeTarget.Null;
+            var stdErrBuffer = new StringBuilder();
+
+            var stdErrPipe = PipeTarget.Merge(
+                PipeTarget.ToStringBuilder(stdErrBuffer), // error data collector
+                progress?.Pipe(p => new FFmpegProgressRouter(p)) ?? PipeTarget.Null // progress
+            );
 
             var arguments = GetArguments(
                 inputFilePaths,
@@ -75,10 +79,20 @@ namespace YoutubeExplode.Converter
                 transcode
             );
 
-            await Cli.Wrap(_cliFilePath)
+            var result = await Cli.Wrap(_cliFilePath)
                 .WithArguments(arguments)
                 .WithStandardErrorPipe(stdErrPipe)
+                .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync(cancellationToken);
+
+            if (result.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    $"FFmpeg exited with a non-zero exit code ({result.ExitCode})." + Environment.NewLine +
+                    "Standard error:" + Environment.NewLine +
+                    stdErrBuffer
+                );
+            }
         }
     }
 
