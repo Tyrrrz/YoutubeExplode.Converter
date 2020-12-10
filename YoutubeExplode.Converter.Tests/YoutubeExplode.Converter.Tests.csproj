@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="../YoutubeExplode.Converter.props" />
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -12,7 +11,7 @@
   <ItemGroup>
     <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="CliWrap" Version="3.2.4" />
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
