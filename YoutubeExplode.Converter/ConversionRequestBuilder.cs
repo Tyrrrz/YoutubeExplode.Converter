@@ -22,7 +22,7 @@ namespace YoutubeExplode.Converter
         public ConversionRequestBuilder(string outputFilePath) =>
             _outputFilePath = outputFilePath;
 
-        private ConversionFormat GetDefaultFormat() => new ConversionFormat(
+        private ConversionFormat GetDefaultFormat() => new(
             Path.GetExtension(_outputFilePath).TrimStart('.').NullIfWhiteSpace() ??
             "mp4"
         );
@@ -63,7 +63,7 @@ namespace YoutubeExplode.Converter
         /// <summary>
         /// Builds the resulting request.
         /// </summary>
-        public ConversionRequest Build() => new ConversionRequest(
+        public ConversionRequest Build() => new(
             _ffmpegCliFilePath ?? DefaultFFmpegCliPathLazy.Value,
             _outputFilePath,
             _format ?? GetDefaultFormat(),
@@ -73,7 +73,7 @@ namespace YoutubeExplode.Converter
 
     public partial class ConversionRequestBuilder
     {
-        private static readonly Lazy<string> DefaultFFmpegCliPathLazy = new Lazy<string>(() =>
+        private static readonly Lazy<string> DefaultFFmpegCliPathLazy = new(() =>
             // Try to find FFmpeg in the probe directory
             new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory)
                 .EnumerateFiles()

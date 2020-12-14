@@ -29,7 +29,7 @@ namespace YoutubeExplode.Converter
 
     public partial struct ConversionFormat
     {
-        private static readonly HashSet<string> AudioOnlyFormats =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase) {"mp3", "m4a", "wav", "wma", "ogg", "aac", "opus"};
+        private static readonly HashSet<string> AudioOnlyFormats = new(StringComparer.OrdinalIgnoreCase)
+            {"mp3", "m4a", "wav", "wma", "ogg", "aac", "opus"};
     }
 }

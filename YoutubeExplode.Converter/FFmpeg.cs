@@ -100,7 +100,7 @@ namespace YoutubeExplode.Converter
     {
         private class FFmpegProgressRouter : PipeTarget
         {
-            private readonly StringBuilder _buffer  = new StringBuilder();
+            private readonly StringBuilder _buffer  = new();
             private readonly IProgress<double> _output;
 
             private TimeSpan? _totalDuration;
