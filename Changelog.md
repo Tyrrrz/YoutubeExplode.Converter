@@ -1,3 +1,8 @@
+### v2.0.1 (26-Dec-2020)
+
+- Exceptions thrown when executing FFmpeg now also contain the process stderr buffer.
+- Bumped all dependency versions to latest.
+
 ### v2.0 (15-Oct-2020)
 
 - Reworked the library. Please refer to the readme for updated usage.

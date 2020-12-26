@@ -19,7 +19,7 @@ YoutubeExplode.Converter is an extension package for [YoutubeExplode](https://gi
 - Download adaptive videos directly to a file
 - Choose specific streams to use
 - Configure conversion settings
-- Works with .NET Standard 2.0+ and .NET Framework 4.6.1+ (desktop only)
+- Targets .NET Standard 2.0+ and .NET Framework 4.6.1+
 
 ## Usage
 
