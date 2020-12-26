@@ -1,3 +1,7 @@
+### v2.0.2 (26-Dec-2020)
+
+- Fixed `NullReferenceException` that occurred when using latest version of CliWrap.
+
 ### v2.0.1 (26-Dec-2020)
 
 - Exceptions thrown when executing FFmpeg now also contain the process stderr buffer.
