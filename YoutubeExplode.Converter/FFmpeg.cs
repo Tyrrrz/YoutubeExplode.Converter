@@ -83,7 +83,8 @@ namespace YoutubeExplode.Converter
                 .WithArguments(arguments)
                 .WithStandardErrorPipe(stdErrPipe)
                 .WithValidation(CommandResultValidation.None)
-                .ExecuteAsync(cancellationToken);
+                .ExecuteAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             if (result.ExitCode != 0)
             {
@@ -143,7 +144,7 @@ namespace YoutubeExplode.Converter
                 var buffer = new char[1024];
                 int charsRead;
 
-                while ((charsRead = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                while ((charsRead = await reader.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     _buffer.Append(buffer, 0, charsRead);

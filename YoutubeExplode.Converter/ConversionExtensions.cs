@@ -102,7 +102,7 @@ namespace YoutubeExplode.Converter
                         streamFilePath,
                         streamDownloadProgress,
                         cancellationToken
-                    );
+                    ).ConfigureAwait(false);
                 }
 
                 // Mux/convert streams
@@ -116,7 +116,7 @@ namespace YoutubeExplode.Converter
                     isTranscodingRequired,
                     conversionProgress,
                     cancellationToken
-                );
+                ).ConfigureAwait(false);
 
                 progress?.Report(1);
             }
@@ -147,7 +147,7 @@ namespace YoutubeExplode.Converter
             IProgress<double>? progress = null,
             CancellationToken cancellationToken = default)
         {
-            var streamManifest = await videoClient.Streams.GetManifestAsync(videoId);
+            var streamManifest = await videoClient.Streams.GetManifestAsync(videoId).ConfigureAwait(false);
             var streamInfos = GetBestMediaStreamInfos(streamManifest, request.Format).ToArray();
 
             await videoClient.DownloadAsync(
@@ -155,7 +155,7 @@ namespace YoutubeExplode.Converter
                 request,
                 progress,
                 cancellationToken
-            );
+            ).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace YoutubeExplode.Converter
             configure(requestBuilder);
             var request = requestBuilder.Build();
 
-            await videoClient.DownloadAsync(videoId, request, progress, cancellationToken);
+            await videoClient.DownloadAsync(videoId, request, progress, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -188,7 +188,8 @@ namespace YoutubeExplode.Converter
             IProgress<double>? progress = null,
             CancellationToken cancellationToken = default)
         {
-            await videoClient.DownloadAsync(videoId, outputFilePath, o => {}, progress, cancellationToken);
+            await videoClient.DownloadAsync(videoId, outputFilePath, _ => { }, progress, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }
