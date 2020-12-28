@@ -6,7 +6,7 @@
 [![Downloads](https://img.shields.io/nuget/dt/YoutubeExplode.Converter.svg)](https://nuget.org/packages/YoutubeExplode.Converter)
 [![Donate](https://img.shields.io/badge/donate-$$$-purple.svg)](https://tyrrrz.me/donate)
 
-**Project status: maintenance mode** (bug fixes only).
+⚠️ **Project status: maintenance mode** (bug fixes only).
 
 YoutubeExplode.Converter is an extension package for [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode) that provides an interface to download and mux videos directly using FFmpeg.
 
