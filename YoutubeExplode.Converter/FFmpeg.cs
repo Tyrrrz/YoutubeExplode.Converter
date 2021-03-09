@@ -124,11 +124,11 @@ namespace YoutubeExplode.Converter
                 var data = _buffer.ToString();
 
                 _totalDuration ??= TryParseTotalDuration(data);
-                if (_totalDuration == null)
+                if (_totalDuration is null)
                     return;
 
                 var currentOffset = TryParseCurrentOffset(data);
-                if (currentOffset == null || currentOffset == _lastOffset)
+                if (currentOffset is null || currentOffset == _lastOffset)
                     return;
 
                 _lastOffset = currentOffset;

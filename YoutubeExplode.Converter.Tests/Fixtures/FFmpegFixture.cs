@@ -35,7 +35,7 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
 
             var entry = zip.GetEntry(GetFFmpegFileName());
 
-            if (entry == null)
+            if (entry is null)
                 throw new FileNotFoundException("Downloaded archive doesn't contain FFmpeg.");
 
             await using var entryStream = entry.Open();
