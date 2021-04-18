@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace YoutubeExplode.Converter.Internal
+namespace YoutubeExplode.Converter.Utils
 {
     internal class ProgressMixer
     {
+        private readonly object _lock = new();
+
         private readonly IProgress<double> _output;
         private readonly Dictionary<int, double> _splitTotals;
 
@@ -22,7 +24,7 @@ namespace YoutubeExplode.Converter.Internal
             var index = _splitCount++;
             return new Progress<double>(p =>
             {
-                lock (_splitTotals)
+                lock (_lock)
                 {
                     _splitTotals[index] = multiplier * p;
                     _output.Report(_splitTotals.Values.Sum());

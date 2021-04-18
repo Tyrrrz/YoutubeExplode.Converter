@@ -12,11 +12,11 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
     public partial class FFmpegFixture : IAsyncLifetime
     {
         public string FilePath => Path.Combine(
-            Path.GetDirectoryName(typeof(FFmpegFixture).Assembly.Location)!,
+            Path.GetDirectoryName(typeof(FFmpegFixture).Assembly.Location) ?? Directory.GetCurrentDirectory(),
             GetFFmpegFileName()
         );
 
-        private async Task EnsureFFmpegExecutePermissionAsync()
+        private async ValueTask EnsureFFmpegHasExecutePermissionAsync()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return;
@@ -26,7 +26,7 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
                 .ExecuteAsync();
         }
 
-        private async Task DownloadFFmpegAsync()
+        private async ValueTask DownloadFFmpegAsync()
         {
             using var httpClient = new HttpClient();
 
@@ -42,7 +42,7 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
             await using var fileStream = File.Create(FilePath);
             await entryStream.CopyToAsync(fileStream);
 
-            await EnsureFFmpegExecutePermissionAsync();
+            await EnsureFFmpegHasExecutePermissionAsync();
         }
 
         public async Task InitializeAsync()

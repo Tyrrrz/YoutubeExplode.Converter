@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using YoutubeExplode.Converter.Internal;
-using YoutubeExplode.Converter.Internal.Extensions;
+using YoutubeExplode.Converter.Utils;
+using YoutubeExplode.Converter.Utils.Extensions;
 using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.Streams;
 
@@ -23,10 +23,6 @@ namespace YoutubeExplode.Converter
             StreamManifest streamManifest,
             ConversionFormat format)
         {
-            // Fail if there are no available streams
-            if (!streamManifest.Streams.Any())
-                throw new ArgumentException("There are no streams available.", nameof(streamManifest));
-
             // Use single muxed stream if adaptive streams are not available
             if (!streamManifest.GetAudioOnlyStreams().Any() || !streamManifest.GetVideoOnlyStreams().Any())
             {
@@ -63,7 +59,7 @@ namespace YoutubeExplode.Converter
         /// <summary>
         /// Downloads specified media streams and processes them into a single file.
         /// </summary>
-        public static async Task DownloadAsync(
+        public static async ValueTask DownloadAsync(
             this VideoClient videoClient,
             IReadOnlyList<IStreamInfo> streamInfos,
             ConversionRequest request,
@@ -72,6 +68,11 @@ namespace YoutubeExplode.Converter
         {
             Platform.EnsureDesktop();
 
+            // Ensure that the provided stream collection is not empty
+            if (!streamInfos.Any())
+                throw new InvalidOperationException("No streams provided.");
+
+            // If all streams have the same container as the output format, then transcoding is not required
             var isTranscodingRequired = streamInfos.Any(s => IsTranscodingRequired(s.Container, request.Format));
 
             // Progress setup
@@ -137,16 +138,18 @@ namespace YoutubeExplode.Converter
         }
 
         /// <summary>
-        /// Selects best media streams for the specified video, downloads them, and processes into a single file.
+        /// Resolves the best media streams for the specified video, downloads them and processes into a single file.
         /// </summary>
-        public static async Task DownloadAsync(
+        public static async ValueTask DownloadAsync(
             this VideoClient videoClient,
             VideoId videoId,
             ConversionRequest request,
             IProgress<double>? progress = null,
             CancellationToken cancellationToken = default)
         {
-            var streamManifest = await videoClient.Streams.GetManifestAsync(videoId).ConfigureAwait(false);
+            var streamManifest = await videoClient.Streams.GetManifestAsync(videoId, cancellationToken)
+                .ConfigureAwait(false);
+
             var streamInfos = GetBestMediaStreamInfos(streamManifest, request.Format).ToArray();
 
             await videoClient.DownloadAsync(
@@ -158,10 +161,12 @@ namespace YoutubeExplode.Converter
         }
 
         /// <summary>
-        /// Selects best media streams for the specified video, downloads them, and processes into a single file.
-        /// Conversion format is derived from file extension, unless explicitly specified.
+        /// Resolves the best media streams for the specified video, downloads them and processes into a single file.
         /// </summary>
-        public static async Task DownloadAsync(
+        /// <remarks>
+        /// Conversion format is derived from file extension, unless explicitly specified.
+        /// </remarks>
+        public static async ValueTask DownloadAsync(
             this VideoClient videoClient,
             VideoId videoId,
             string outputFilePath,
@@ -173,14 +178,18 @@ namespace YoutubeExplode.Converter
             configure(requestBuilder);
             var request = requestBuilder.Build();
 
-            await videoClient.DownloadAsync(videoId, request, progress, cancellationToken).ConfigureAwait(false);
+            await videoClient.DownloadAsync(videoId, request, progress, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Selects best media streams for the specified video, downloads them, and processes into a single file.
-        /// Conversion format is derived from file extension. If none is specified, mp4 is chosen as the default.
+        /// Resolves the best media streams for the specified video, downloads them and processes into a single file.
         /// </summary>
-        public static async Task DownloadAsync(
+        /// <remarks>
+        /// Conversion format is derived from file extension.
+        /// If none specified, mp4 is chosen by default.
+        /// </remarks>
+        public static async ValueTask DownloadAsync(
             this VideoClient videoClient,
             VideoId videoId,
             string outputFilePath,

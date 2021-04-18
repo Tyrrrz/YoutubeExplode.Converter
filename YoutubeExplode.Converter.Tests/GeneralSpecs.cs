@@ -26,7 +26,7 @@ namespace YoutubeExplode.Converter.Tests
         }
 
         [Fact]
-        public async Task I_can_download_a_video_by_merging_best_streams_into_a_single_mp4_file()
+        public async Task User_can_download_a_video_by_merging_best_streams_into_a_single_mp4_file()
         {
             // Arrange
             var youtube = new YoutubeClient();
@@ -43,7 +43,7 @@ namespace YoutubeExplode.Converter.Tests
         }
 
         [Fact]
-        public async Task I_can_download_a_video_by_merging_best_streams_into_a_single_webm_file()
+        public async Task User_can_download_a_video_by_merging_best_streams_into_a_single_webm_file()
         {
             // Arrange
             var youtube = new YoutubeClient();
@@ -60,7 +60,7 @@ namespace YoutubeExplode.Converter.Tests
         }
 
         [Fact]
-        public async Task I_can_download_a_video_by_merging_best_streams_into_a_single_mp3_file()
+        public async Task User_can_download_a_video_by_merging_best_streams_into_a_single_mp3_file()
         {
             // Arrange
             var youtube = new YoutubeClient();
@@ -77,7 +77,7 @@ namespace YoutubeExplode.Converter.Tests
         }
 
         [Fact]
-        public async Task I_can_download_a_video_by_merging_best_streams_into_a_single_ogg_file()
+        public async Task User_can_download_a_video_by_merging_best_streams_into_a_single_ogg_file()
         {
             // Arrange
             var youtube = new YoutubeClient();
@@ -94,7 +94,7 @@ namespace YoutubeExplode.Converter.Tests
         }
 
         [Fact]
-        public async Task I_can_download_a_video_with_custom_conversion_settings()
+        public async Task User_can_download_a_video_with_custom_conversion_settings()
         {
             // Arrange
             var youtube = new YoutubeClient();
@@ -117,7 +117,7 @@ namespace YoutubeExplode.Converter.Tests
         }
 
         [Fact]
-        public async Task I_can_download_a_video_and_it_reports_progress_correctly()
+        public async Task User_can_download_a_video_and_track_the_progress_of_the_operation()
         {
             // Arrange
             var progressReports = new List<double>();

@@ -1,4 +1,4 @@
-﻿namespace YoutubeExplode.Converter.Internal.Extensions
+﻿namespace YoutubeExplode.Converter.Utils.Extensions
 {
     internal static class StringExtensions
     {

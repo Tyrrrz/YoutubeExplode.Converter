@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
 using CliWrap.Builders;
-using YoutubeExplode.Converter.Internal.Extensions;
+using YoutubeExplode.Converter.Utils.Extensions;
 
 namespace YoutubeExplode.Converter
 {
@@ -55,7 +55,7 @@ namespace YoutubeExplode.Converter
             return arguments.Build();
         }
 
-        public async Task ExecuteAsync(
+        public async ValueTask ExecuteAsync(
             IReadOnlyList<string> inputFilePaths,
             string outputFilePath,
             string format,
@@ -115,7 +115,11 @@ namespace YoutubeExplode.Converter
                 .Pipe(s => TimeSpan.ParseExact(s, "c", CultureInfo.InvariantCulture));
 
             private TimeSpan? TryParseCurrentOffset(string data) => data
-                .Pipe(s => Regex.Matches(s, @"time=(\d\d:\d\d:\d\d.\d\d)").Cast<Match>().LastOrDefault()?.Groups[1].Value)?
+                .Pipe(s => Regex.Matches(s, @"time=(\d\d:\d\d:\d\d.\d\d)")
+                    .Cast<Match>()
+                    .LastOrDefault()?
+                    .Groups[1]
+                    .Value)?
                 .NullIfWhiteSpace()?
                 .Pipe(s => TimeSpan.ParseExact(s, "c", CultureInfo.InvariantCulture));
 
@@ -133,7 +137,10 @@ namespace YoutubeExplode.Converter
 
                 _lastOffset = currentOffset;
 
-                var progress = (currentOffset.Value.TotalMilliseconds / _totalDuration.Value.TotalMilliseconds).Clamp(0, 1);
+                var progress = (
+                    currentOffset.Value.TotalMilliseconds / _totalDuration.Value.TotalMilliseconds
+                ).Clamp(0, 1);
+
                 _output.Report(progress);
             }
 

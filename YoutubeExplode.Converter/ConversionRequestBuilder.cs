@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using YoutubeExplode.Converter.Internal.Extensions;
+using YoutubeExplode.Converter.Utils.Extensions;
 
 namespace YoutubeExplode.Converter
 {
@@ -80,6 +80,7 @@ namespace YoutubeExplode.Converter
                 .Select(f => f.FullName)
                 .FirstOrDefault(f => string.Equals(Path.GetFileNameWithoutExtension(f), "ffmpeg",
                     StringComparison.OrdinalIgnoreCase))
+
             // Otherwise fallback to just "ffmpeg" and hope it's on the PATH
             ?? "ffmpeg"
         );

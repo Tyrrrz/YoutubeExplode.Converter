@@ -6,7 +6,7 @@ namespace YoutubeExplode.Converter.Tests.Fixtures
     public class TempOutputFixture : IDisposable
     {
         public string DirPath => Path.Combine(
-            Path.GetDirectoryName(typeof(TempOutputFixture).Assembly.Location)!,
+            Path.GetDirectoryName(typeof(TempOutputFixture).Assembly.Location) ?? Directory.GetCurrentDirectory(),
             "Temp"
         );
 

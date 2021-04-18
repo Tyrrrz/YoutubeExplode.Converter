@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace YoutubeExplode.Converter.Internal
+namespace YoutubeExplode.Converter.Utils
 {
     internal static class Platform
     {
