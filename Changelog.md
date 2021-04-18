@@ -1,3 +1,7 @@
+### v2.1 (18-Apr-2021)
+
+- Updated the library to support YoutubeExplode v6.0.
+
 ### v2.0.2 (26-Dec-2020)
 
 - Fixed `NullReferenceException` that occurred when using latest version of CliWrap.
