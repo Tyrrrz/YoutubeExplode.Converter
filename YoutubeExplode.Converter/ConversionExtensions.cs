@@ -28,11 +28,11 @@ namespace YoutubeExplode.Converter
                 throw new ArgumentException("There are no streams available.", nameof(streamManifest));
 
             // Use single muxed stream if adaptive streams are not available
-            if (!streamManifest.GetAudioOnly().Any() || !streamManifest.GetVideoOnly().Any())
+            if (!streamManifest.GetAudioOnlyStreams().Any() || !streamManifest.GetVideoOnlyStreams().Any())
             {
                 // Priority: video quality -> transcoding
                 yield return streamManifest
-                    .GetMuxed()
+                    .GetMuxedStreams()
                     .OrderByDescending(s => s.VideoQuality)
                     .ThenByDescending(s => !IsTranscodingRequired(s.Container, format))
                     .First();
@@ -43,7 +43,7 @@ namespace YoutubeExplode.Converter
             // Include audio stream
             // Priority: transcoding -> bitrate
             yield return streamManifest
-                .GetAudioOnly()
+                .GetAudioOnlyStreams()
                 .OrderByDescending(s => !IsTranscodingRequired(s.Container, format))
                 .ThenByDescending(s => s.Bitrate)
                 .First();
@@ -51,11 +51,10 @@ namespace YoutubeExplode.Converter
             // Include video stream
             if (!format.IsAudioOnly)
             {
-                // Priority: video quality -> framerate -> transcoding
+                // Priority: video quality -> transcoding
                 yield return streamManifest
-                    .GetVideoOnly()
+                    .GetVideoOnlyStreams()
                     .OrderByDescending(s => s.VideoQuality)
-                    .ThenByDescending(s => s.Framerate)
                     .ThenByDescending(s => !IsTranscodingRequired(s.Container, format))
                     .First();
             }
@@ -78,7 +77,7 @@ namespace YoutubeExplode.Converter
             // Progress setup
             var progressMixer = progress?.Pipe(p => new ProgressMixer(p));
             var downloadProgressPortion = isTranscodingRequired ? 0.15 : 0.99;
-            var totalStreamSize = streamInfos.Sum(s => s.Size.TotalBytes);
+            var totalStreamSize = streamInfos.Sum(s => s.Size.Bytes);
 
             // Temp files for streams
             var streamFilePaths = new List<string>(streamInfos.Count);
@@ -94,7 +93,7 @@ namespace YoutubeExplode.Converter
                     streamFilePaths.Add(streamFilePath);
 
                     var streamDownloadProgress = progressMixer?.Split(
-                        downloadProgressPortion * streamInfo.Size.TotalBytes / totalStreamSize
+                        downloadProgressPortion * streamInfo.Size.Bytes / totalStreamSize
                     );
 
                     await videoClient.Streams.DownloadAsync(
