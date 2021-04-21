@@ -12,24 +12,19 @@ YoutubeExplode.Converter is an extension package for [YoutubeExplode](https://gi
 
 ## Download
 
-- [NuGet](https://nuget.org/packages/YoutubeExplode.Converter): `dotnet add package YoutubeExplode.Converter`
-
-## Features
-
-- Download adaptive videos directly to a file
-- Choose specific streams to use
-- Configure conversion settings
-- Targets .NET Standard 2.0+ and .NET Framework 4.6.1+
+📦 [NuGet](https://nuget.org/packages/YoutubeExplode.Converter): `dotnet add package YoutubeExplode.Converter`
 
 ## Usage
 
-This library relies on [FFmpeg](https://ffmpeg.org), which you can download [here](https://github.com/vot/ffbinaries-prebuilt). By default, `YoutubeExplode.Converter` will look for the CLI it in the probe directory (where the `dll` files are located), but you can also specify the exact location as well.
+> Note that this library relies on [FFmpeg](https://ffmpeg.org) binaries, which you can download [here](https://github.com/vot/ffbinaries-prebuilt).
+By default, YoutubeExplode.Converter will look for FFmpeg in the probe directory (where the application's `dll` files are located), but you can also specify the exact location as well.
 
 Resource usage and execution time depends mostly on whether transcoding between streams is required. When possible, use streams that have the same container as the output format (e.g. `mp4` audio/video streams for `mp4` output format). Currently, YouTube only provides adaptive streams in `mp4` or `webm` containers, with highest quality video streams (e.g. 4K) only available in `webm`.
 
-### Download video in highest quality
+### Downloading a video in highest quality
 
-The following will automatically resolve and determine the most fitting set of streams for the specified format, download them, and process into a single file:
+YoutubeExplode.Converter can be used through one of the extension methods provided on `VideoClient`.
+For example, to download a video in the best available quality, simply call `DownloadAsync(...)` with the video ID and the destination file path:
 
 ```c#
 using YoutubeExplode;
@@ -39,13 +34,17 @@ var youtube = new YoutubeClient();
 await youtube.Videos.DownloadAsync("https://youtube.com/watch?v=u_yIGGhubZs", "video.mp4");
 ```
 
-Audio streams are prioritized by format then by bitrate, while video streams are prioritized by video quality and framerate, then by format. Additionally, if the output format is a known audio-only format (e.g. `mp3` or `ogg`) then only the audio stream is downloaded.
+Under the hood, this resolves available media streams and selects the best candidates based on bitrate, quality, and framerate.
+If the specified output format is a known audio-only container (e.g. `mp3` or `ogg`) then only the audio stream is downloaded.
 
-### Configure conversion
+### Custom conversion options
 
-You can use one of the overloads to configure different aspects of the conversion process:
+There is an additional overload of `DownloadAsync(...)` that can be used to configure different aspects of the conversion process:
 
 ```c#
+using YoutubeExplode;
+using YoutubeExplode.Converter;
+
 var youtube = new YoutubeClient();
 
 await youtube.Videos.DownloadAsync(
@@ -57,19 +56,23 @@ await youtube.Videos.DownloadAsync(
 );
 ```
 
-### Download specific streams
+### Specifying streams manually
 
-You can also skip the default strategy for determining most fitting streams and pass them directly:
+If you need precise control over which streams are used for conversion, you can specify them directly as well:
 
 ```c#
+using YoutubeExplode;
+using YoutubeExplode.Videos.Streams;
+using YoutubeExplode.Converter;
+
 var youtube = new YoutubeClient();
 
 // Get stream manifest
 var streamManifest = await youtube.Videos.Streams.GetManifestAsync("https://youtube.com/watch?v=u_yIGGhubZs");
 
 // Select streams (1080p60 / highest bitrate audio)
-var audioStreamInfo = streamManifest.GetAudio().WithHighestBitrate();
-var videoStreamInfo = streamManifest.GetVideo().FirstOrDefault(s => s.VideoQualityLabel == "1080p60");
+var audioStreamInfo = streamManifest.GetAudioStreams().GetWithHighestBitrate();
+var videoStreamInfo = streamManifest.GetVideoStreams().First(s => s.VideoQuality.Label == "1080p60");
 var streamInfos = new IStreamInfo[] { audioStreamInfo, videoStreamInfo };
 
 // Download and process them into one file
