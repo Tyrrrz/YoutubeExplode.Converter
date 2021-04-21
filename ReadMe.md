@@ -19,8 +19,6 @@ YoutubeExplode.Converter is an extension package for [YoutubeExplode](https://gi
 > Note that this library relies on [FFmpeg](https://ffmpeg.org) binaries, which you can download [here](https://github.com/vot/ffbinaries-prebuilt).
 By default, YoutubeExplode.Converter will look for FFmpeg in the probe directory (where the application's `dll` files are located), but you can also specify the exact location as well.
 
-Resource usage and execution time depends mostly on whether transcoding between streams is required. When possible, use streams that have the same container as the output format (e.g. `mp4` audio/video streams for `mp4` output format). Currently, YouTube only provides adaptive streams in `mp4` or `webm` containers, with highest quality video streams (e.g. 4K) only available in `webm`.
-
 ### Downloading a video in highest quality
 
 YoutubeExplode.Converter can be used through one of the extension methods provided on `VideoClient`.
@@ -37,9 +35,13 @@ await youtube.Videos.DownloadAsync("https://youtube.com/watch?v=u_yIGGhubZs", "v
 Under the hood, this resolves available media streams and selects the best candidates based on bitrate, quality, and framerate.
 If the specified output format is a known audio-only container (e.g. `mp3` or `ogg`) then only the audio stream is downloaded.
 
+> Resource usage and execution time depends mostly on whether transcoding between streams is required.
+When possible, use streams that have the same container as the output format (e.g. `mp4` audio/video streams for `mp4` output format).
+Currently, YouTube only provides adaptive streams in `mp4` or `webm` containers, with highest quality video streams (e.g. 4K) only available in `webm`.
+
 ### Custom conversion options
 
-There is an additional overload of `DownloadAsync(...)` that can be used to configure different aspects of the conversion process:
+You can configure various aspects pertaining to the conversion process by using one of the overloads of `DownloadAsync(...)`:
 
 ```c#
 using YoutubeExplode;
@@ -48,7 +50,8 @@ using YoutubeExplode.Converter;
 var youtube = new YoutubeClient();
 
 await youtube.Videos.DownloadAsync(
-    "https://youtube.com/watch?v=u_yIGGhubZs", "video.mp4",
+    "https://youtube.com/watch?v=u_yIGGhubZs",
+    "video.mp4",
     o => o
         .SetFormat("webm") // override format
         .SetPreset(ConversionPreset.UltraFast) // change preset
