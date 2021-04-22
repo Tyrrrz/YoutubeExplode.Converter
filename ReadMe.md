@@ -71,7 +71,7 @@ using YoutubeExplode.Converter;
 var youtube = new YoutubeClient();
 
 // Get stream manifest
-var streamManifest = await youtube.Videos.Streams.GetManifestAsync("https://youtube.com/watch?v=u_yIGGhubZs");
+var streamManifest = await youtube.Videos.Streams.GetManifestAsync("u_yIGGhubZs");
 
 // Select streams (1080p60 / highest bitrate audio)
 var audioStreamInfo = streamManifest.GetAudioStreams().GetWithHighestBitrate();
