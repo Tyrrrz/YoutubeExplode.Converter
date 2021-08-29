@@ -9,6 +9,8 @@
 
 ⚠️ **Project status: maintenance mode** (bug fixes only).
 
+➡ The contents of this repository have been moved to [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode).
+
 YoutubeExplode.Converter is an extension package for [YoutubeExplode](https://github.com/Tyrrrz/YoutubeExplode) that provides an interface to download and mux videos directly using FFmpeg.
 
 ## Download
